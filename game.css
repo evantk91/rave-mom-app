@@ -1,9 +1,8 @@
-* {
+/* * {
     background-image: url('./free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg');
-}
+} */
 
 canvas {
     display: block;
     margin: auto;
-    opacity: 0.5
 }
