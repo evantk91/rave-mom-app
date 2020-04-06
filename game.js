@@ -6,7 +6,8 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet('player', './su3_Student_male_05.png', { frameWidth: 64, frameHeight: 64 })
+        this.load.spritesheet('player', './sprite_sheets/su3_Student_male_05.png', { frameWidth: 64, frameHeight: 64 })
+        this.load.spritesheet('bomb', './sprite_sheets/bomb_sprite_sheet.png', { frameWidth: 74, frameHeight: 74 })
 
         this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
         this.load.image('block', './Level-barriers.png')
@@ -46,6 +47,7 @@ class GameScene extends Phaser.Scene {
         this.add.image(320, 320, 'bg')
 
         gameState.player = this.physics.add.sprite(37, 37, 'player', 0);
+        gameState.bombs = this.physics.add.group();
 
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
@@ -85,7 +87,13 @@ class GameScene extends Phaser.Scene {
             repeat: -1, 
             frameRate: 5,
         });
-        
+
+        this.anims.create({
+            key: 'bomb',
+            frames: this.anims.generateFrameNumbers('bomb', {start: 0, end: 7}),
+            repeat: -1,
+            frameRate: 5
+        })
     }
     
     update() {
@@ -104,6 +112,79 @@ class GameScene extends Phaser.Scene {
         } else {
             gameState.player.setVelocityX(0);
             gameState.player.setVelocityY(0);
+        }
+
+        this.input.keyboard.once('keyup_SPACE', function() {
+            let bombX = bombLocation(gameState.player)[0]
+            let bombY = bombLocation(gameState.player)[1]
+            
+            console.log('bomb!!')
+            gameState.bombs.create(bombX, bombY, 'bomb')
+        })
+
+        gameState.bombs.playAnimation('bomb', 0);
+ 
+        function bombLocation(player) {
+            let player_row = rowLocation(player);
+            let column_idx
+
+            if (player_row === 'row_1' || player_row === 'row_3' || player_row === 'row_5' || player_row === 'row_7' || player_row === 'row_9') {
+                if(player.x <= 74) {
+                    column_idx = 0;
+                } else if(player.x > 74 && player.x <= 148) {
+                    column_idx = 1;
+                } else if(player.x > 148 && player.x <= 222) {
+                    column_idx = 2;
+                } else if(player.x > 222 && player.x <= 296) {
+                    column_idx = 3;
+                } else if(player.x > 296 && player.x <= 370) {
+                    column_idx = 4;
+                } else if(player.x > 370 && player.x <= 444) {
+                    column_idx = 5;
+                } else if(player.x > 444 && player.x <= 518) {
+                    column_idx = 6;
+                } else if(player.x > 518 && player.x <= 592) {
+                    column_idx = 7;
+                } else {
+                    column_idx = 8;
+                }
+            } else {
+                if(player.x <= 74) {
+                    column_idx = 0;
+                } else if(player.x > 148 && player.x <= 222) {
+                    column_idx = 1;
+                } else if(player.x > 296 && player.x <= 370) {
+                    column_idx = 2;
+                } else if(player.x > 444 && player.x <= 518) {
+                    column_idx = 3;
+                } else if(player.x > 592) {
+                    column_idx = 4
+                }
+            }
+
+            return gameState.bombLocations[player_row][column_idx]
+        }
+
+        function rowLocation(player) {
+            if(player.y <= 74) {
+                return 'row_1'
+            } else if(player.y > 74 && player.y <= 148) {
+                return 'row_2'
+            } else if(player.y > 148 && player.y <= 222) {
+                return 'row_3'
+            } else if(player.y > 222 && player.y <= 296) {
+                return 'row_4'
+            } else if(player.y > 296 && player.y <= 370) {
+                return 'row_5'
+            } else if(player.y > 370 && player.y <= 444) {
+                return 'row_6'
+            } else if(player.y > 444 && player.y <= 518) {
+                return 'row_7'
+            } else if(player.y > 518 && player.y <= 592) {
+                return 'row_8'
+            } else {
+                return 'row_9'
+            }
         }
     }
 }
