@@ -6,16 +6,16 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet('player', './sprite_sheets/su3_Student_male_05.png', { frameWidth: 64, frameHeight: 64 })
-        this.load.spritesheet('bomb1', './sprite_sheets/bomb_sprite_sheet.png', { frameWidth: 74, frameHeight: 74 })
+        this.load.spritesheet('player', './sprite_sheets/png_sheets/su3_Student_male_05.png', { frameWidth: 64, frameHeight: 64 })
+        this.load.spritesheet('bomb1', './sprite_sheets/png_sheets/bomb_sprite_sheet.png', { frameWidth: 74, frameHeight: 74 })
 
-        this.load.spritesheet('middle-explosion', './sprite_sheets/middle_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
-        this.load.spritesheet('left-edge-explosion', './sprite_sheets/left_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
-        this.load.spritesheet('top-edge-explosion', './sprite_sheets/top_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
-        this.load.spritesheet('right-edge-explosion', './sprite_sheets/right_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
-        this.load.spritesheet('bottom-edge-explosion', './sprite_sheets/bottom_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
-        this.load.spritesheet('inbetween-vertical-explosion', './sprite_sheets/inbetween_vertical_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
-        this.load.spritesheet('inbetween-horizontal-explosion', './sprite_sheets/inbetween_vertical_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
+        this.load.spritesheet('middle_explosion', './sprite_sheets/png_sheets/middle_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
+        this.load.spritesheet('left_edge_explosion', './sprite_sheets/png_sheets/left_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
+        this.load.spritesheet('top_edge_explosion', './sprite_sheets/png_sheets/top_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
+        this.load.spritesheet('right_edge_explosion', './sprite_sheets/png_sheets/right_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
+        this.load.spritesheet('bottom_edge_explosion', './sprite_sheets/png_sheets/bottom_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
+        this.load.spritesheet('inbetween_vertical_explosion', './sprite_sheets/png_sheets/inbetween_vertical_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
+        this.load.spritesheet('inbetween_horizontal_explosion', './sprite_sheets/png_sheets/inbetween_vertical_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
 
         this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
         this.load.image('block', './Level-barriers.png')
@@ -88,9 +88,9 @@ class GameScene extends Phaser.Scene {
             [777, 1147], [925, 1147], [1073, 1147]
         ]
 
-        gameState.inbetweenVerticalBombLocations = [
-            [703, 777], [851, 777], [999, 777], [1147, 777]
-            [703, 925], [851, 925], [999, 925], [1147, 925]
+        gameState.inbetweenHorizontalBombLocations = [
+            [703, 777], [851, 777], [999, 777], [1147, 777],
+            [703, 925], [851, 925], [999, 925], [1147, 925],
             [703, 1073], [851, 1073], [999, 1073], [1147, 1073]
         ]
     }
@@ -100,7 +100,6 @@ class GameScene extends Phaser.Scene {
 
         gameState.player = this.physics.add.sprite(629, 629, 'player', 0);
         gameState.bomb1 = this.physics.add.sprite(481, 629, 'bomb1', 0);
-        gameState.explosion = this.physics.add.sprite(333, 629, 'explosion', 0);
 
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
@@ -148,38 +147,110 @@ class GameScene extends Phaser.Scene {
         })
 
         this.anims.create({
-            key: 'explosion',
-            frames: this.anims.generateFrameNumbers('explosion', {start: 0, end: 2}),
+            key: 'middle_explosion',
+            frames: this.anims.generateFrameNumbers('middle_explosion', {start: 0, end: 2}),
             repeat: 0,
             frameRate: 3
         })
 
-        //gameState.explosion.anims.play('explosion', false)
-
-        this.input.keyboard.on('keyup_SPACE', function() {
-            let [bombX, bombY] = bombLocation(gameState.player)
-            
-            gameState.bomb1.x = bombX;
-            gameState.bomb1.y = bombY;
-
-            gameState.bomb1.anims.play('bomb', false);
-            gameState.bomb1.on('animationcomplete', function() {
-                gameState.bomb1.x = 481;
-                gameState.bomb1.y = 629;
-
-                gameState.explosion.x = bombX;
-                gameState.explosion.y = bombY;
-
-                gameState.explosion.anims.play('explosion', false);
-                gameState.explosion.on('animationcomplete', function() {
-                    gameState.explosion.x = 333;
-                    gameState.explosion.y = 629;
-                })
-            }, this)
+        this.anims.create({
+            key: 'left_edge_explosion',
+            frames: this.anims.generateFrameNumbers('left_edge_explosion', {start: 0, end: 2}),
+            repeat: 0,
+            frameRate: 3
         })
 
+        this.anims.create({
+            key: 'top_edge_explosion',
+            frames: this.anims.generateFrameNumbers('top_edge_explosion', {start: 0, end: 2}),
+            repeat: 0,
+            frameRate: 3
+        })
+
+        this.anims.create({
+            key: 'right_edge_explosion',
+            frames: this.anims.generateFrameNumbers('right_edge_explosion', {start: 0, end: 2}),
+            repeat: 0,
+            frameRate: 3
+        })
+
+        this.anims.create({
+            key: 'bottom_edge_explosion',
+            frames: this.anims.generateFrameNumbers('bottom_edge_explosion', {start: 0, end: 2}),
+            repeat: 0,
+            frameRate: 3
+        })
+
+        this.anims.create({
+            key: 'inbetween_vertical_explosion',
+            frames: this.anims.generateFrameNumbers('inbetween_vertical_explosion', {start: 0, end: 2}),
+            repeat: 0,
+            frameRate: 3
+        })
+
+        this.anims.create({
+            key: 'inbetween_horizontal_explosion',
+            frames: this.anims.generateFrameNumbers('inbetween_horizontal_explosion', {start: 0, end: 2}),
+            repeat: 0,
+            frameRate: 3
+        })
+
+        let bomb = [629, 629]
+
+        //gameState.explosion = this.physics.add.sprite(629, 629, explosionType(bomb), 0);
+
+        //gameState.explosion.anims.play('explosion', false)
+
+        // this.input.keyboard.on('keyup_SPACE', function() {
+        //     let [bombX, bombY] = bombLocation(gameState.player)
+            
+        //     gameState.bomb1.x = bombX;
+        //     gameState.bomb1.y = bombY;
+
+        //     gameState.bomb1.anims.play('bomb', false);
+        //     gameState.bomb1.on('animationcomplete', function() {
+        //         gameState.bomb1.x = 481;
+        //         gameState.bomb1.y = 629;
+
+        //         gameState.explosion.x = bombX;
+        //         gameState.explosion.y = bombY;
+
+        //         gameState.explosion.anims.play('explosion', false);
+        //         gameState.explosion.on('animationcomplete', function() {
+        //             gameState.explosion.x = 333;
+        //             gameState.explosion.y = 629;
+        //         })
+        //     }, this)
+        // })
+
         gameState.bomb1 = this.physics.add.sprite(481, 629, 'bomb1', 0);
-        gameState.explosion = this.physics.add.sprite(333, 629, '4-direction-explosion', 0);
+        console.log(explosionType([777, 703]))
+
+        function explosionType(location) {
+            if(isArrayInArray(gameState.middleBombLocations, location)) {
+                return 'middle_explosion'
+            } else if(isArrayInArray(gameState.leftEdgeBombLocations, location)) {
+                return 'left_edge_explosion'
+            } else if(isArrayInArray(gameState.topEdgeBombLocations, location)) {
+                return 'top_edge_explosion'
+            } else if(isArrayInArray(gameState.rightEdgeBombLocations, location)) {
+                return 'right_edge_explosion'
+            } else if(isArrayInArray(gameState.bottomEdgeBombLocations, location)) {
+                return 'bottom_edge_explosion'
+            } else if(isArrayInArray(gameState.inbetweenVerticalBombLocations, location)) {
+                return 'inbetween_vertical_explosion'
+            } else {
+                return 'inbetween_horizontal_explosion'
+            }
+        }
+
+        function isArrayInArray(arr, item) {
+            var itemString = JSON.stringify(item);
+            var contains = arr.some(function(ele) {
+                return JSON.stringify(ele) === itemString;
+            });
+            return contains;
+        }
 
         function bombLocation(player) {
             let player_row = rowLocation(player);
@@ -281,3 +352,14 @@ const config = {
 }
 
 const game = new Phaser.Game(config);
+
+//explosionType([629, 629])
+
+
+
+
+
+
+
+console.log(gameState.middleBombLocations)
+
