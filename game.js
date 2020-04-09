@@ -15,7 +15,7 @@ class GameScene extends Phaser.Scene {
         this.load.spritesheet('right_edge_explosion', './sprite_sheets/png_sheets/right_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
         this.load.spritesheet('bottom_edge_explosion', './sprite_sheets/png_sheets/bottom_edge_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
         this.load.spritesheet('inbetween_vertical_explosion', './sprite_sheets/png_sheets/inbetween_vertical_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
-        this.load.spritesheet('inbetween_horizontal_explosion', './sprite_sheets/png_sheets/inbetween_vertical_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
+        this.load.spritesheet('inbetween_horizontal_explosion', './sprite_sheets/png_sheets/inbetween_horizontal_explosion_sprite_sheet.png', { frameWidth: 1258, frameHeight: 1258 })
 
         this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
         this.load.image('block', './Level-barriers.png')
@@ -97,6 +97,7 @@ class GameScene extends Phaser.Scene {
     
     create() {
         this.add.image(925, 925, 'bg')
+        new Camera(Phaser.Game, 'main', 592, 592, 666, 666)
 
         gameState.player = this.physics.add.sprite(629, 629, 'player', 0);
         gameState.bomb1 = this.physics.add.sprite(481, 629, 'bomb1', 0);
@@ -195,7 +196,7 @@ class GameScene extends Phaser.Scene {
             frameRate: 3
         })
 
-        let bomb = [629, 629]
+        
 
         //gameState.explosion = this.physics.add.sprite(629, 629, explosionType(bomb), 0);
 
@@ -223,8 +224,11 @@ class GameScene extends Phaser.Scene {
         //     }, this)
         // })
 
-        gameState.bomb1 = this.physics.add.sprite(481, 629, 'bomb1', 0);
-        console.log(explosionType([777, 703]))
+        let bomb = [703, 777]
+
+        gameState.explosion = this.physics.add.sprite(bomb[0], bomb[1], explosionType(bomb), 0)
+        gameState.explosion.anims.play(explosionType(bomb), true); 
+        console.log(explosionType(bomb))
 
         function explosionType(location) {
             if(isArrayInArray(gameState.middleBombLocations, location)) {
@@ -333,7 +337,9 @@ class GameScene extends Phaser.Scene {
             gameState.player.setVelocityX(0);
             gameState.player.setVelocityY(0);
             gameState.player.anims.pause();
-        }        
+        }
+        
+            
     }
 }
 
