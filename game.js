@@ -1,4 +1,6 @@
-const gameState = {};
+const gameState = {
+    score: 0
+};
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -7,7 +9,7 @@ class GameScene extends Phaser.Scene {
 
     preload() {
         this.load.spritesheet('player', './sprite_sheets/png_sheets/raver_player1.png', { frameWidth: 64, frameHeight: 64 })
-        this.load.spritesheet('rave-girl', './sprite_sheets/png_sheets/rave_girl.png', {frameWidth: 74, frameHeight: 74})
+        this.load.spritesheet('ravegirl', './sprite_sheets/png_sheets/rave_girl.png', {frameWidth: 74, frameHeight: 74})
 
         this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
         this.load.image('block', './Level-barriers.png')
@@ -21,16 +23,27 @@ class GameScene extends Phaser.Scene {
             [259, 111], [259, 259], [259, 407],
             [407, 111], [407, 259], [407, 407],
         ]
+
+        gameState.raveGirlLocations = [
+            [37, 37], [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [481, 37],
+            [37, 111], [185, 111], [333, 111], [481, 111],
+            [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185],
+            [37, 259], [185, 259], [333, 259], [481, 259],
+            [37, 333], [111, 333], [185, 333], [259, 333], [333, 333], [407, 333], [481, 333],
+            [37, 407], [185, 407], [333, 407], [481, 407],
+            [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
+        ]
     }
     
     create() {
         this.add.image(0, 0, 'bg')
-        
-        // this.physics.world.setBounds()
 
         gameState.player = this.physics.add.sprite(37, 37, 'player', 0);
-        gameState.ravegirl = this.physics.add.sprite(185, 185, 'rave-girl', 0);
-        gameState.bomb = this.physics.add.sprite(259, 259, 'bomb1', 0);
+        gameState.scoreText = this.add.text(200, 530, 'SCORE: 0', {fontSize: '30px', fill: '#FFFFFF'});
+
+        let randIdx = Math.floor(Math.random() * 40);
+        let [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx]
+        gameState.ravegirl1 = this.physics.add.sprite(ravegirlstartX, ravegirlstartY, 'ravegirl', 0)
 
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
@@ -80,18 +93,46 @@ class GameScene extends Phaser.Scene {
         }
 
         this.anims.create({
-            key: `rave-girl`,
-            frames: this.anims.generateFrameNumbers('rave-girl', {start: 0, end: 11}),
-            repeat: -1,
-            frameRate: 5
+            key: 'ravegirl',
+            frames: this.anims.generateFrameNumbers('ravegirl', {start: 0, end: 11}),
+            repeat: 0,
+            frameRate: 2
         })
+
+        gameState.ravegirl1.anims.play('ravegirl', true)
+
+        gameState.ravegirl1.on('animationcomplete', function() {
+            let randIdx = Math.floor(Math.random() * 40);
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx];
+
+            gameState.ravegirl1.x = raveGirlX;
+            gameState.ravegirl1.y = raveGirlY;
+            gameState.ravegirl1.setVelocityX(0); gameState.ravegirl1.setVelocityY(0)
+            gameState.ravegirl1.anims.play('ravegirl', true)
+        })
+
+
+        this.physics.add.collider(gameState.ravegirl1, gameState.player, function() {
+            let randIdx = Math.floor(Math.random() * 40);
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx];
+
+            gameState.ravegirl1.x = raveGirlX; gameState.ravegirl1.y = raveGirlY;
+            gameState.ravegirl1.setVelocityX(0); gameState.ravegirl1.setVelocityY(0);
+            gameState.ravegirl1.anims.stop(null, true);
+
+            gameState.score += 1;
+            gameState.scoreText.setText(`SCORE: ${gameState.score}`);
+
+            console.log(gameState.ravegirl1.x);
+            console.log(gameState.ravegirl1.y);
+        })
+
+
+        // function raveGirlGen() {
+        //     [raveGirlX, raveGirlY] = gameState.raveGirlLocations(Math.floor(Math.random() * 40))
+        //     raveGirls.create(raveGirlX, raveGirlY, 'rave-girl')
+        // }
         
-        gameState.bomb.anims.play('bomb32')
-        gameState.ravegirl.anims.play('rave-girl')
-
-
-        //gameState.explosion.anims.play('explosion', false)
-
         // this.input.keyboard.on('keyup_SPACE', function() {
         //     let [bombX, bombY] = bombLocation(gameState.player)
             
@@ -172,7 +213,7 @@ const config = {
     type: Phaser.AUTO,
     width: 518,
     height: 592,
-    backgroundColor: FFFFFF,
+    backgroundColor: 'OxFFFFFF',
     physics: {
         default: 'arcade',
         arcade: { 
