@@ -1,6 +1,47 @@
-/* * {
-    background-image: url('./free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg');
-} */
+* {
+    box-sizing: border-box;
+    background-color: black;
+}
+
+body{
+    margin:0;
+}
+
+.video-header{
+    height:100%;
+}
+
+.fullscreen-video-wrap video {
+    min-width: 100%;
+    min-height: 100%;
+}
+
+.background-video {
+    height: 30rem;
+}
+
+.header-overlay{
+    width: 100%;
+    position: absolute;
+    margin-top: 0;
+    top:0;
+    left:0;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background-color: navy;
+    z-index: 1;
+    opacity: 50%;
+    overflow-x: hidden;
+}
+
+.header-content {
+    z-index: 2;
+    color: white;
+    background-color: navy;
+}
+
+
 
 canvas {
     display: block;
