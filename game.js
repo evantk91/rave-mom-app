@@ -6,7 +6,8 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.spritesheet('player', './sprite_sheets/png_sheets/su3_Student_male_05.png', { frameWidth: 64, frameHeight: 64 })
+        this.load.spritesheet('player', './sprite_sheets/png_sheets/raver_player1.png', { frameWidth: 64, frameHeight: 64 })
+        this.load.spritesheet('rave-girl', './sprite_sheets/png_sheets/rave_girl.png', {frameWidth: 74, frameHeight: 74})
 
         this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
         this.load.image('block', './Level-barriers.png')
@@ -28,6 +29,7 @@ class GameScene extends Phaser.Scene {
         // this.physics.world.setBounds()
 
         gameState.player = this.physics.add.sprite(37, 37, 'player', 0);
+        gameState.ravegirl = this.physics.add.sprite(185, 185, 'rave-girl', 0);
         gameState.bomb = this.physics.add.sprite(259, 259, 'bomb1', 0);
 
         gameState.cursors = this.input.keyboard.createCursorKeys();
@@ -77,7 +79,16 @@ class GameScene extends Phaser.Scene {
             })
         }
 
-        gameState.bomb.anims.play('bomb40')
+        this.anims.create({
+            key: `rave-girl`,
+            frames: this.anims.generateFrameNumbers('rave-girl', {start: 0, end: 11}),
+            repeat: -1,
+            frameRate: 5
+        })
+        
+        gameState.bomb.anims.play('bomb32')
+        gameState.ravegirl.anims.play('rave-girl')
+
 
         //gameState.explosion.anims.play('explosion', false)
 
@@ -161,7 +172,7 @@ const config = {
     type: Phaser.AUTO,
     width: 518,
     height: 592,
-    backgroundColor: 000000,
+    backgroundColor: FFFFFF,
     physics: {
         default: 'arcade',
         arcade: { 
