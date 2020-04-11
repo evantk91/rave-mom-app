@@ -14,6 +14,8 @@ class GameScene extends Phaser.Scene {
             this.load.spritesheet(`ravegirl${i}`, `./sprite_sheets/png_sheets/raver_girl${i}.png`, {frameWidth: 74, frameHeight: 74})
         }
 
+        this.load.spritesheet('heart','./sprite_sheets/png_sheets/Heart.png', {frameWidth: 74, frameHeight: 74})
+
         this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
         this.load.image('block', './Level-barriers.png')
 
@@ -36,28 +38,72 @@ class GameScene extends Phaser.Scene {
             [37, 407], [185, 407], [333, 407], [481, 407],
             [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
         ]
+
+        gameState.playerGridPositions = {
+            row1: [
+                [37, 37], [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [481, 37]
+            ],
+            row2: [
+                [37, 111], [185, 111], [333, 111], [481, 111]
+            ],
+            row3: [
+                [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185]
+            ],
+            row4: [
+                [37, 259], [185, 259], [333, 259], [481, 259]
+            ],
+            row5: [
+                [37, 333], [111, 333], [185, 333], [259, 333], [333, 333], [407, 333], [481, 333]
+            ],
+            row6: [
+                [37, 407], [185, 407], [333, 407], [481, 407]
+            ],
+            row7: [
+                [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
+            ]  
+        }
     }
     
     create() {
         this.add.image(0, 0, 'bg')
 
-        gameState.player = this.physics.add.sprite(37, 37, 'player', 0);
-        gameState.scoreText = this.add.text(200, 530, 'SCORE: 0', {fontSize: '30px', fill: '#FFFFFF'});
-
-        let randIdx = Math.floor(Math.random() * 40);
-        let [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx]
-        gameState.ravegirl1 = this.physics.add.sprite(ravegirlstartX, ravegirlstartY, 'ravegirl1', 0)
-
-        randIdx = Math.floor(Math.random() * 40);
-        [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx]
-        gameState.ravegirl2 = this.physics.add.sprite(ravegirlstartX, ravegirlstartY, 'ravegirl2', 0)
-
-        randIdx = Math.floor(Math.random() * 40);
-        [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx]
-        gameState.ravegirl3 = this.physics.add.sprite(ravegirlstartX, ravegirlstartY, 'ravegirl3', 0)
-        
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
+        gameState.player = this.physics.add.sprite(37, 37, 'player', 0);
+        gameState.heart = this.physics.add.sprite(111, 111, 'heart', 0)
+        gameState.scoreText = this.add.text(200, 530, 'SCORE: 0', {fontSize: '30px', fill: '#FFFFFF'});
+
+        let ravegirl1_x = setInitialRaveGirlPosition()[0]
+        let ravegirl1_y = setInitialRaveGirlPosition()[1]
+        gameState.ravegirl1 = this.physics.add.sprite(ravegirl1_x, ravegirl1_y, 'ravegirl1', 0)
+
+        let ravegirl2_x = setInitialRaveGirlPosition()[0]
+        let ravegirl2_y = setInitialRaveGirlPosition()[1]
+        if(ravegirl2_x === gameState.ravegirl1.x && ravegirl2_y === gameState.ravegirl1.y) {
+            ravegirl2_x = setInitialRaveGirlPosition()[0]
+            ravegirl2_y = setInitialRaveGirlPosition()[1]
+        }
+        gameState.ravegirl2 = this.physics.add.sprite(ravegirl2_x, ravegirl2_y, 'ravegirl2', 0)
+
+        let ravegirl3_x = setInitialRaveGirlPosition()[0]
+        let ravegirl3_y = setInitialRaveGirlPosition()[1]
+        while((ravegirl3_x === gameState.ravegirl1.x && ravegirl3_y === gameState.ravegirl1.y) ||
+        (ravegirl3_x === gameState.ravegirl2.x && ravegirl3_y === gameState.ravegirl2.y)) {
+            ravegirl3_x = setInitialRaveGirlPosition()[0]
+            ravegirl3_y = setInitialRaveGirlPosition()[1]
+        }
+        gameState.ravegirl3 = this.physics.add.sprite(ravegirl3_x, ravegirl3_y, 'ravegirl3', 0)
+
+        function setInitialRaveGirlPosition() {
+            let randIdx = Math.floor(Math.random() * 40);
+            let [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx];
+            if(ravegirlstartX === getPlayerGridPosition(gameState.player) && ravegirlstartY === getPlayerGridPosition(gameState.player)) {
+                randIdx = Math.floor(Math.random() * 40);
+                [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx];
+            }
+            return [ravegirlstartX, ravegirlstartY]
+        }
+        
         const blocks = this.physics.add.staticGroup();
 
         for (let i = 0; i < gameState.blockLocations.length; i++) {
@@ -111,6 +157,13 @@ class GameScene extends Phaser.Scene {
                 frameRate: 3
             })
         }
+
+        this.anims.create({
+            key: `heart`,
+            frames: this.anims.generateFrameNumbers('heart', {start: 0, end: 3}),
+            repeat: 1,
+            frameRate: 3
+        })  
         
         gameState.ravegirl1.anims.play('ravegirl1', true)
         gameState.ravegirl2.anims.play('ravegirl2', true)
@@ -132,7 +185,6 @@ class GameScene extends Phaser.Scene {
 
         gameState.ravegirl2.on('animationcomplete', function() {
             randIdx2 = Math.floor(Math.random() * 40);
-
             while ((randIdx2 === randIdx1) ||  (randIdx2 === randIdx3)) {
                 randIdx2 = Math.floor(Math.random() * 40);
             } 
@@ -160,6 +212,13 @@ class GameScene extends Phaser.Scene {
         })
 
         this.physics.add.collider(gameState.ravegirl1, gameState.player, function() {
+            gameState.heart.x = gameState.ravegirl1.x;
+            gameState.heart.y = gameState.ravegirl1.y;
+            gameState.heart.anims.play('heart', true);
+            gameState.heart.on('animationcomplete', function() {
+                gameState.heart.x = 111; gameState.heart.y = 111;
+            })
+
             randIdx1 = Math.floor(Math.random() * 40);
 
             while ((randIdx1 === randIdx2) ||  (randIdx1 === randIdx3)) {
@@ -177,13 +236,17 @@ class GameScene extends Phaser.Scene {
         })
 
         this.physics.add.collider(gameState.ravegirl2, gameState.player, function() {
+            gameState.heart.x = gameState.ravegirl2.x;
+            gameState.heart.y = gameState.ravegirl2.y;
+            gameState.heart.anims.play('heart', true);
+
             randIdx2 = Math.floor(Math.random() * 40);
 
             while ((randIdx2 === randIdx1) ||  (randIdx2 === randIdx3)) {
                 randIdx2 = Math.floor(Math.random() * 40);
             } 
 
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx];
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx2];
 
             gameState.ravegirl2.x = raveGirlX; gameState.ravegirl2.y = raveGirlY;
             gameState.ravegirl2.setVelocityX(0); gameState.ravegirl2.setVelocityY(0);
@@ -194,6 +257,10 @@ class GameScene extends Phaser.Scene {
         })
 
         this.physics.add.collider(gameState.ravegirl3, gameState.player, function() {
+            gameState.heart.x = gameState.ravegirl2.x;
+            gameState.heart.y = gameState.ravegirl2.y;
+            gameState.heart.anims.play('heart', true);
+
             randIdx3 = Math.floor(Math.random() * 40);
 
             while ((randIdx3 === randIdx1) || (randIdx3 === randIdx2)) {
@@ -209,6 +276,60 @@ class GameScene extends Phaser.Scene {
             gameState.score += 1;
             gameState.scoreText.setText(`SCORE: ${gameState.score}`);
         })
+
+        function getPlayerGridPosition(player) {
+            let playerRow = getPlayerRow(player)
+            let playerCol = getPlayerCol(player)
+            return gameState.playerGridPositions[playerRow][playerCol]
+        }
+        
+        function getPlayerRow(player) {
+            if(player.y <= 74) {
+                return 'row1';
+            } else if(player.y > 74 && player.y <= 148) {
+                return 'row2';
+            } else if(player.y > 148 && player.y <= 222) {
+                return 'row3';
+            } else if(player.y > 222 && player.y <= 296) {
+                return 'row4';
+            } else if(player.y > 296 && player.y <= 370) {
+                return 'row5';
+            } else if(player.y > 370 && player.y <= 444) {
+                return 'row6';
+            } else {
+                return 'row7';
+            }
+        }
+
+        function getPlayerCol(player) {
+            if(getPlayerRow(player) === 'row1' || getPlayerRow(player) === 'row3' || getPlayerRow(player) === 'row5' || getPlayerRow(player) === 'row7') {
+                if(player.x <= 74) {
+                    return 0;
+                } else if(player.x > 74 && player.x <= 148) {
+                    return 1;
+                } else if(player.x > 148 && player.x <= 222) {
+                    return 2;
+                } else if(player.x > 222 && player.x <= 296) {
+                    return 3;
+                } else if(player.x > 296 && player.x <= 370) {
+                    return 4;
+                } else if(player.x > 370 && player.x <= 444) {
+                    return 5;
+                } else {
+                    return 6;
+                }
+            } else {
+                if(player.x <= 74) {
+                    return 0;
+                } else if(player.x > 148 && player.x <= 222) {
+                    return 2;
+                } else if(player.x > 296 && player.x <= 370) {
+                    return 4;
+                } else {
+                    return 6;
+                }
+            }
+        } 
     }
     
     update() {
@@ -228,7 +349,7 @@ class GameScene extends Phaser.Scene {
             gameState.player.setVelocityX(0);
             gameState.player.setVelocityY(0);
             gameState.player.anims.pause();
-        }      
+        }
     }
 }
 
