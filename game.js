@@ -9,7 +9,10 @@ class GameScene extends Phaser.Scene {
 
     preload() {
         this.load.spritesheet('player', './sprite_sheets/png_sheets/raver_player1.png', { frameWidth: 64, frameHeight: 64 })
-        this.load.spritesheet('ravegirl', './sprite_sheets/png_sheets/rave_girl.png', {frameWidth: 74, frameHeight: 74})
+
+        for(var i = 1; i <= 3; i++) {
+            this.load.spritesheet(`ravegirl${i}`, `./sprite_sheets/png_sheets/raver_girl${i}.png`, {frameWidth: 74, frameHeight: 74})
+        }
 
         this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
         this.load.image('block', './Level-barriers.png')
@@ -43,8 +46,16 @@ class GameScene extends Phaser.Scene {
 
         let randIdx = Math.floor(Math.random() * 40);
         let [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx]
-        gameState.ravegirl1 = this.physics.add.sprite(ravegirlstartX, ravegirlstartY, 'ravegirl', 0)
+        gameState.ravegirl1 = this.physics.add.sprite(ravegirlstartX, ravegirlstartY, 'ravegirl1', 0)
 
+        randIdx = Math.floor(Math.random() * 40);
+        [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx]
+        gameState.ravegirl2 = this.physics.add.sprite(ravegirlstartX, ravegirlstartY, 'ravegirl2', 0)
+
+        randIdx = Math.floor(Math.random() * 40);
+        [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx]
+        gameState.ravegirl3 = this.physics.add.sprite(ravegirlstartX, ravegirlstartY, 'ravegirl3', 0)
+        
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
         const blocks = this.physics.add.staticGroup();
@@ -92,29 +103,70 @@ class GameScene extends Phaser.Scene {
             })
         }
 
-        this.anims.create({
-            key: 'ravegirl',
-            frames: this.anims.generateFrameNumbers('ravegirl', {start: 0, end: 11}),
-            repeat: 0,
-            frameRate: 2
-        })
+        for(var i = 1; i <= 3; i++) {
+            this.anims.create({
+                key: `ravegirl${i}`,
+                frames: this.anims.generateFrameNumbers(`ravegirl${i}`, {start: 0, end: 11}),
+                repeat: 0,
+                frameRate: 3
+            })
+        }
+        
+        gameState.ravegirl1.anims.play('ravegirl1', true)
+        gameState.ravegirl2.anims.play('ravegirl2', true)
+        gameState.ravegirl3.anims.play('ravegirl3', true)
 
-        gameState.ravegirl1.anims.play('ravegirl', true)
+        let randIdx1
+        let randIdx2
+        let randIdx3
 
         gameState.ravegirl1.on('animationcomplete', function() {
-            let randIdx = Math.floor(Math.random() * 40);
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx];
+            randIdx1 = Math.floor(Math.random() * 40);
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx1];
 
             gameState.ravegirl1.x = raveGirlX;
             gameState.ravegirl1.y = raveGirlY;
             gameState.ravegirl1.setVelocityX(0); gameState.ravegirl1.setVelocityY(0)
-            gameState.ravegirl1.anims.play('ravegirl', true)
+            gameState.ravegirl1.anims.play('ravegirl1', true)
         })
 
+        gameState.ravegirl2.on('animationcomplete', function() {
+            randIdx2 = Math.floor(Math.random() * 40);
+
+            while ((randIdx2 === randIdx1) ||  (randIdx2 === randIdx3)) {
+                randIdx2 = Math.floor(Math.random() * 40);
+            } 
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx2];
+
+            gameState.ravegirl2.x = raveGirlX;
+            gameState.ravegirl2.y = raveGirlY;
+            gameState.ravegirl2.setVelocityX(0); gameState.ravegirl2.setVelocityY(0)
+            gameState.ravegirl2.anims.play('ravegirl2', true)
+        })
+
+        gameState.ravegirl3.on('animationcomplete', function() {
+            randIdx3 = Math.floor(Math.random() * 40);
+
+            while ((randIdx3 === randIdx1) || (randIdx3 === randIdx2)) {
+                randIdx3 = Math.floor(Math.random() * 40);
+            }
+
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx3];
+
+            gameState.ravegirl3.x = raveGirlX;
+            gameState.ravegirl3.y = raveGirlY;
+            gameState.ravegirl3.setVelocityX(0); gameState.ravegirl3.setVelocityY(0)
+            gameState.ravegirl3.anims.play('ravegirl3', true)
+        })
 
         this.physics.add.collider(gameState.ravegirl1, gameState.player, function() {
-            let randIdx = Math.floor(Math.random() * 40);
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx];
+            randIdx1 = Math.floor(Math.random() * 40);
+
+            while ((randIdx1 === randIdx2) ||  (randIdx1 === randIdx3)) {
+                randIdx1 = Math.floor(Math.random() * 40);
+            } 
+
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx1];
 
             gameState.ravegirl1.x = raveGirlX; gameState.ravegirl1.y = raveGirlY;
             gameState.ravegirl1.setVelocityX(0); gameState.ravegirl1.setVelocityY(0);
@@ -122,70 +174,41 @@ class GameScene extends Phaser.Scene {
 
             gameState.score += 1;
             gameState.scoreText.setText(`SCORE: ${gameState.score}`);
-
-            console.log(gameState.ravegirl1.x);
-            console.log(gameState.ravegirl1.y);
         })
 
+        this.physics.add.collider(gameState.ravegirl2, gameState.player, function() {
+            randIdx2 = Math.floor(Math.random() * 40);
 
-        // function raveGirlGen() {
-        //     [raveGirlX, raveGirlY] = gameState.raveGirlLocations(Math.floor(Math.random() * 40))
-        //     raveGirls.create(raveGirlX, raveGirlY, 'rave-girl')
-        // }
-        
-        // this.input.keyboard.on('keyup_SPACE', function() {
-        //     let [bombX, bombY] = bombLocation(gameState.player)
-            
-        //     gameState.bomb1.x = bombX;
-        //     gameState.bomb1.y = bombY;
+            while ((randIdx2 === randIdx1) ||  (randIdx2 === randIdx3)) {
+                randIdx2 = Math.floor(Math.random() * 40);
+            } 
 
-        //     gameState.bomb1.anims.play('bomb', false);
-        //     gameState.bomb1.on('animationcomplete', function() {
-        //         gameState.bomb1.x = 481;
-        //         gameState.bomb1.y = 629;
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx];
 
-        //         gameState.explosion.x = bombX;
-        //         gameState.explosion.y = bombY;
+            gameState.ravegirl2.x = raveGirlX; gameState.ravegirl2.y = raveGirlY;
+            gameState.ravegirl2.setVelocityX(0); gameState.ravegirl2.setVelocityY(0);
+            gameState.ravegirl2.anims.stop(null, true);
 
-        //         gameState.explosion.anims.play('explosion', false);
-        //         gameState.explosion.on('animationcomplete', function() {
-        //             gameState.explosion.x = 333;
-        //             gameState.explosion.y = 629;
-        //         })
-        //     }, this)
-        // })
+            gameState.score += 1;
+            gameState.scoreText.setText(`SCORE: ${gameState.score}`);
+        })
 
-        
+        this.physics.add.collider(gameState.ravegirl3, gameState.player, function() {
+            randIdx3 = Math.floor(Math.random() * 40);
 
-        // gameState.explosion = this.physics.add.sprite(bomb[0], bomb[1], explosionType(bomb), 0)
-        // gameState.explosion.anims.play(explosionType(bomb), true); 
-        // console.log(explosionType(bomb))
+            while ((randIdx3 === randIdx1) || (randIdx3 === randIdx2)) {
+                randIdx3 = Math.floor(Math.random() * 40);
+            }
 
-        // function explosionType(location) {
-        //     if(isArrayInArray(gameState.middleBombLocations, location)) {
-        //         return 'middle_explosion'
-        //     } else if(isArrayInArray(gameState.leftEdgeBombLocations, location)) {
-        //         return 'left_edge_explosion'
-        //     } else if(isArrayInArray(gameState.topEdgeBombLocations, location)) {
-        //         return 'top_edge_explosion'
-        //     } else if(isArrayInArray(gameState.rightEdgeBombLocations, location)) {
-        //         return 'right_edge_explosion'
-        //     } else if(isArrayInArray(gameState.bottomEdgeBombLocations, location)) {
-        //         return 'bottom_edge_explosion'
-        //     } else if(isArrayInArray(gameState.inbetweenVerticalBombLocations, location)) {
-        //         return 'inbetween_vertical_explosion'
-        //     } else {
-        //         return 'inbetween_horizontal_explosion'
-        //     }
-        // }
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx3];
 
-        // function isArrayInArray(arr, item) {
-        //     var itemString = JSON.stringify(item);
-        //     var contains = arr.some(function(ele) {
-        //         return JSON.stringify(ele) === itemString;
-        //     });
-        //     return contains;
-        // }
+            gameState.ravegirl3.x = raveGirlX; gameState.ravegirl3.y = raveGirlY;
+            gameState.ravegirl3.setVelocityX(0); gameState.ravegirl3.setVelocityY(0);
+            gameState.ravegirl3.anims.stop(null, true);
+
+            gameState.score += 1;
+            gameState.scoreText.setText(`SCORE: ${gameState.score}`);
+        })
     }
     
     update() {
