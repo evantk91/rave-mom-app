@@ -297,6 +297,19 @@ class GameScene extends Phaser.Scene {
         let randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
         gameState.bomb.anims.play(randBomb, true)
         gameState.bomb.on('animationcomplete', function() {
+            let [playerX, playerY] = getPlayerGridPosition(gameState.player)
+            console.log([playerX, playerY])
+            console.log(gameState.explosionPositions[randBomb])
+
+            if(isArrayInArray(gameState.explosionPositions[randBomb], [playerX, playerY])) {
+                gameState.scoreText.x = 50
+                gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
+                gameState.bomb.anims.pause()
+                gameState.ravegirl1.anims.pause()
+                gameState.ravegirl2.anims.pause()
+                gameState.ravegirl3.anims.pause()
+            }
+
             randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
             gameState.bomb.anims.play(randBomb, true);
         })
@@ -411,6 +424,14 @@ class GameScene extends Phaser.Scene {
             gameState.score += 1;
             gameState.scoreText.setText(`SCORE: ${gameState.score}`);
         })
+
+        function isArrayInArray(arr, item) {
+            var itemStr = JSON.stringify(item);
+            var contains = arr.some(function(ele) {
+                return JSON.stringify(ele) === itemStr;
+            });
+            return contains;
+        }
 
         function getPlayerGridPosition(player) {
             let playerRow = getPlayerRow(player)
