@@ -15,7 +15,7 @@ class GameScene extends Phaser.Scene {
         }
 
         this.load.spritesheet('heart','./sprite_sheets/png_sheets/Heart.png', {frameWidth: 74, frameHeight: 74})
-        this.load.spritesheet('player-loses', './sprite_sheets/png_sheets/raver_player_loses.png', {frameWidth: 74, frameHeight: 74})
+        this.load.spritesheet('playerloses', './sprite_sheets/png_sheets/raver_player_loses.png', {frameWidth: 74, frameHeight: 74})
 
         this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
         this.load.image('block', './Level-barriers.png')
@@ -110,31 +110,31 @@ class GameScene extends Phaser.Scene {
             bomb15: [
                 [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185]
             ],
-            bomb16:[
+            bomb16: [
                 [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185], [333, 37], [333, 111], [333, 259], [333, 333], [333, 407] 
             ],
             bomb17:[
                 [185, 185], [259, 185], [333, 185], [407, 185], [481, 185]
             ],
-            bomb18:[
+            bomb18: [
                 [259, 185], [333, 185], [407, 185], [481, 185], [481, 37], [481, 111], [481, 259], [481, 333], [481, 407]
             ],
-            bomb19:[
+            bomb19: [
                 [37, 37], [37, 111], [37, 185], [37, 259], [37, 333], [37, 407], [37, 481]
             ],
-            bomb20:[
+            bomb20: [
                 [185, 37], [185, 111], [185, 185], [185, 259], [185, 333], [185, 407], [185, 481]
             ],
-            bomb21:[
+            bomb21: [
                 [333, 37], [333, 111], [333, 185], [333, 259], [333, 333], [333, 407], [333, 481]
             ],
-            bomb22:[
+            bomb22: [
                 [481, 37], [481, 111], [481, 185], [481, 259], [481, 333], [481, 407], [481, 481]
             ],
-            bomb23:[
+            bomb23: [
                 [37, 333], [111, 333], [185, 333], [259, 333], [37, 111], [37, 185], [37, 259], [37, 407], [37, 481]
             ],
-            bomb24:[
+            bomb24: [
                 [37, 333], [111, 333], [185, 333], [259, 333], [333, 333]
             ],
             bomb25: [
@@ -167,25 +167,27 @@ class GameScene extends Phaser.Scene {
             bomb34: [
                 [37, 259], [37, 333], [37, 407], [37, 481], [111, 481], [185, 481], [259, 481]
             ],
-            bomb35:[
+            bomb35: [
                 [37, 481], [111, 481], [185, 481], [259, 481], [333, 481]
             ],
-            bomb36:[
+            bomb36: [
                 [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [185, 259], [185, 333], [185, 407]
             ],
-            bomb37:[
+            bomb37: [
                 [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
             ],
-            bomb38:[
+            bomb38: [
                 [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481], [333, 259], [333, 333], [333, 407]
             ],
-            bomb39:[
+            bomb39: [
                 [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
             ],
-            bomb40:[
+            bomb40: [
                 [259, 481], [333, 481], [407, 481], [481, 481], [259, 481], [333, 481], [407, 481]
             ]
         }
+
+        gameState.gameEnded = false;
     }
     
     create() {
@@ -194,8 +196,11 @@ class GameScene extends Phaser.Scene {
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
         gameState.player = this.physics.add.sprite(37, 37, 'player', 0);
+        gameState.player.enable = true;
         gameState.heart = this.physics.add.sprite(111, 111, 'heart', 0);
+        gameState.playerloses = this.physics.add.sprite(111, 111, 'playerloses', 0);
         gameState.scoreText = this.add.text(200, 530, 'SCORE: 0', {fontSize: '30px', fill: '#FFFFFF'});
+        gameState.gameEndText = this.add.text(75, 575, '', {fontSize: '30px', fill: '#FFFFFF'})
 
         gameState.bomb = this.physics.add.sprite(256, 256, 'bomb', 0);
 
@@ -285,9 +290,16 @@ class GameScene extends Phaser.Scene {
         }
 
         this.anims.create({
-            key: `heart`,
+            key: 'heart',
             frames: this.anims.generateFrameNumbers('heart', {start: 0, end: 3}),
             repeat: 1,
+            frameRate: 3
+        })
+        
+        this.anims.create({
+            key: 'playerloses',
+            frames: this.anims.generateFrameNumbers('playerloses', {start: 0, end: 3}),
+            repeat: -1,
             frameRate: 3
         })  
         
@@ -297,22 +309,42 @@ class GameScene extends Phaser.Scene {
 
         let randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
         gameState.bomb.anims.play(randBomb, true)
+
+        let playerX; 
+        let playerY;
+
         gameState.bomb.on('animationcomplete', function() {
-            let [playerX, playerY] = getPlayerGridPosition(gameState.player)
-            console.log([playerX, playerY])
-            console.log(gameState.explosionPositions[randBomb])
+            [playerX, playerY] = getPlayerGridPosition(gameState.player)
 
             if(isArrayInArray(gameState.explosionPositions[randBomb], [playerX, playerY])) {
-                gameState.scoreText.x = 50
+                gameState.scoreText.x = 60
                 gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
-                gameState.bomb.anims.pause()
+                
                 gameState.ravegirl1.anims.pause()
                 gameState.ravegirl2.anims.pause()
                 gameState.ravegirl3.anims.pause()
-            }
 
-            randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
-            gameState.bomb.anims.play(randBomb, true);
+                gameState.bomb.destroy()
+
+                gameState.player.x = 111; gameState.player.y = 111;
+                gameState.player.enable = false;
+
+                gameState.playerloses.x = playerX; gameState.playerloses.y = playerY;
+                gameState.playerloses.anims.play('playerloses', true);
+                gameState.gameEndText.setText('CLICK TO PLAY AGAIN');
+                gameState.gameEnded = true;
+
+            } else {
+                randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
+                gameState.bomb.anims.play(randBomb, true);
+            }
+        })
+
+        this.input.on('pointerup', () => {
+            if(gameState.gameEnded === true) {
+                gameState.score = 0;
+                this.scene.restart();
+            }
         })
 
         gameState.ravegirl1.on('animationcomplete', function() {
@@ -490,22 +522,23 @@ class GameScene extends Phaser.Scene {
     }
     
     update() {
-        if(gameState.cursors.down.isDown && gameState.player.y <= 481) {
-            gameState.player.setVelocityY(128);
-            gameState.player.anims.play('walk-down', true);
-        } else if(gameState.cursors.up.isDown && gameState.player.y >= 37) {
-            gameState.player.setVelocityY(-128);
-            gameState.player.anims.play('walk-up', true);
-        } else if(gameState.cursors.right.isDown && gameState.player.x <= 481) { 
-            gameState.player.setVelocityX(128);
-            gameState.player.anims.play('walk-right', true);
-        } else if(gameState.cursors.left.isDown && gameState.player.x >= 37) {
-            gameState.player.setVelocityX(-128);
-            gameState.player.anims.play('walk-left', true);
-        } else {
-            gameState.player.setVelocityX(0);
-            gameState.player.setVelocityY(0);
-            gameState.player.anims.pause();
+        if(gameState.player.enable) {
+            if(gameState.cursors.down.isDown && gameState.player.y <= 481) {
+                gameState.player.setVelocityY(128);
+                gameState.player.anims.play('walk-down', true);
+            } else if(gameState.cursors.up.isDown && gameState.player.y >= 37) {
+                gameState.player.setVelocityY(-128);
+                gameState.player.anims.play('walk-up', true);
+            } else if(gameState.cursors.right.isDown && gameState.player.x <= 481) { 
+                gameState.player.setVelocityX(128);
+                gameState.player.anims.play('walk-right', true);
+            } else if(gameState.cursors.left.isDown && gameState.player.x >= 37) {
+                gameState.player.setVelocityX(-128);
+                gameState.player.anims.play('walk-left', true);
+            } else {
+                gameState.player.setVelocityX(0);
+                gameState.player.setVelocityY(0);   
+            }
         }
     }
 }
@@ -513,7 +546,7 @@ class GameScene extends Phaser.Scene {
 const config = {
     type: Phaser.AUTO,
     width: 518,
-    height: 592,
+    height: 666,
     backgroundColor: 'OxFFFFFF',
     physics: {
         default: 'arcade',
