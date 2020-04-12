@@ -169,14 +169,14 @@ class GameScene extends Phaser.Scene {
         gameState.ravegirl2.anims.play('ravegirl2', true)
         gameState.ravegirl3.anims.play('ravegirl3', true)
 
-        let randIdx1
-        let randIdx2
-        let randIdx3
-
         gameState.ravegirl1.on('animationcomplete', function() {
-            randIdx1 = Math.floor(Math.random() * 40);
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx1];
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
 
+            while (((raveGirlX === gameState.ravegirl2.x) && (raveGirlY === gameState.ravegirl2.y)) || 
+            ((raveGirlX === gameState.ravegirl3.x) && (raveGirlY === gameState.ravegirl3.y))) {
+                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
+            }
+            
             gameState.ravegirl1.x = raveGirlX;
             gameState.ravegirl1.y = raveGirlY;
             gameState.ravegirl1.setVelocityX(0); gameState.ravegirl1.setVelocityY(0)
@@ -184,11 +184,12 @@ class GameScene extends Phaser.Scene {
         })
 
         gameState.ravegirl2.on('animationcomplete', function() {
-            randIdx2 = Math.floor(Math.random() * 40);
-            while ((randIdx2 === randIdx1) ||  (randIdx2 === randIdx3)) {
-                randIdx2 = Math.floor(Math.random() * 40);
-            } 
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx2];
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]; 
+            
+            while (((raveGirlX === gameState.ravegirl1.x) && (raveGirlY === gameState.ravegirl1.y)) || 
+            ((raveGirlX === gameState.ravegirl3.x) && (raveGirlY === gameState.ravegirl3.y))) {
+                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
+            }
 
             gameState.ravegirl2.x = raveGirlX;
             gameState.ravegirl2.y = raveGirlY;
@@ -197,13 +198,12 @@ class GameScene extends Phaser.Scene {
         })
 
         gameState.ravegirl3.on('animationcomplete', function() {
-            randIdx3 = Math.floor(Math.random() * 40);
-
-            while ((randIdx3 === randIdx1) || (randIdx3 === randIdx2)) {
-                randIdx3 = Math.floor(Math.random() * 40);
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
+            
+            while (((raveGirlX === gameState.ravegirl1.x) && (raveGirlY === gameState.ravegirl1.y)) || 
+            ((raveGirlX === gameState.ravegirl2.x) && (raveGirlY === gameState.ravegirl2.y))) {
+                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
             }
-
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx3];
 
             gameState.ravegirl3.x = raveGirlX;
             gameState.ravegirl3.y = raveGirlY;
@@ -219,13 +219,12 @@ class GameScene extends Phaser.Scene {
                 gameState.heart.x = 111; gameState.heart.y = 111;
             })
 
-            randIdx1 = Math.floor(Math.random() * 40);
-
-            while ((randIdx1 === randIdx2) ||  (randIdx1 === randIdx3)) {
-                randIdx1 = Math.floor(Math.random() * 40);
-            } 
-
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx1];
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
+            
+            while (((raveGirlX === gameState.ravegirl2.x) && (raveGirlY === gameState.ravegirl2.y)) || 
+            ((raveGirlX === gameState.ravegirl3.x) && (raveGirlY === gameState.ravegirl3.y))) {
+                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
+            }
 
             gameState.ravegirl1.x = raveGirlX; gameState.ravegirl1.y = raveGirlY;
             gameState.ravegirl1.setVelocityX(0); gameState.ravegirl1.setVelocityY(0);
@@ -239,14 +238,16 @@ class GameScene extends Phaser.Scene {
             gameState.heart.x = gameState.ravegirl2.x;
             gameState.heart.y = gameState.ravegirl2.y;
             gameState.heart.anims.play('heart', true);
+            gameState.heart.on('animationcomplete', function() {
+                gameState.heart.x = 111; gameState.heart.y = 111;
+            });
 
-            randIdx2 = Math.floor(Math.random() * 40);
-
-            while ((randIdx2 === randIdx1) ||  (randIdx2 === randIdx3)) {
-                randIdx2 = Math.floor(Math.random() * 40);
-            } 
-
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx2];
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
+            
+            while (((raveGirlX === gameState.ravegirl1.x) && (raveGirlY === gameState.ravegirl1.y)) || 
+            ((raveGirlX === gameState.ravegirl3.x) && (raveGirlY === gameState.ravegirl3.y))) {
+                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
+            }
 
             gameState.ravegirl2.x = raveGirlX; gameState.ravegirl2.y = raveGirlY;
             gameState.ravegirl2.setVelocityX(0); gameState.ravegirl2.setVelocityY(0);
@@ -257,17 +258,19 @@ class GameScene extends Phaser.Scene {
         })
 
         this.physics.add.collider(gameState.ravegirl3, gameState.player, function() {
-            gameState.heart.x = gameState.ravegirl2.x;
-            gameState.heart.y = gameState.ravegirl2.y;
+            gameState.heart.x = gameState.ravegirl3.x;
+            gameState.heart.y = gameState.ravegirl3.y;
             gameState.heart.anims.play('heart', true);
+            gameState.heart.on('animationcomplete', function() {
+                gameState.heart.x = 111; gameState.heart.y = 111;
+            });
 
-            randIdx3 = Math.floor(Math.random() * 40);
-
-            while ((randIdx3 === randIdx1) || (randIdx3 === randIdx2)) {
-                randIdx3 = Math.floor(Math.random() * 40);
+            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
+            
+            while (((raveGirlX === gameState.ravegirl1.x) && (raveGirlY === gameState.ravegirl1.y)) || 
+            ((raveGirlX === gameState.ravegirl2.x) && (raveGirlY === gameState.ravegirl2.y))) {
+                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
             }
-
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[randIdx3];
 
             gameState.ravegirl3.x = raveGirlX; gameState.ravegirl3.y = raveGirlY;
             gameState.ravegirl3.setVelocityX(0); gameState.ravegirl3.setVelocityY(0);
