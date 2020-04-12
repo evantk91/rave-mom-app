@@ -70,8 +70,10 @@ class GameScene extends Phaser.Scene {
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
         gameState.player = this.physics.add.sprite(37, 37, 'player', 0);
-        gameState.heart = this.physics.add.sprite(111, 111, 'heart', 0)
+        gameState.heart = this.physics.add.sprite(111, 111, 'heart', 0);
         gameState.scoreText = this.add.text(200, 530, 'SCORE: 0', {fontSize: '30px', fill: '#FFFFFF'});
+
+        gameState.bomb = this.physics.add.sprite(256, 256, 'bomb', 0);
 
         let ravegirl1_x = setInitialRaveGirlPosition()[0]
         let ravegirl1_y = setInitialRaveGirlPosition()[1]
@@ -144,7 +146,7 @@ class GameScene extends Phaser.Scene {
             this.anims.create({
                 key: `bomb${i}`,
                 frames: this.anims.generateFrameNumbers(`bomb${i}`, {start: 0, end: 5}),
-                repeat: -1,
+                repeat: 0,
                 frameRate: 3
             })
         }
@@ -168,6 +170,13 @@ class GameScene extends Phaser.Scene {
         gameState.ravegirl1.anims.play('ravegirl1', true)
         gameState.ravegirl2.anims.play('ravegirl2', true)
         gameState.ravegirl3.anims.play('ravegirl3', true)
+
+        let randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
+        gameState.bomb.anims.play(randBomb, true)
+        gameState.bomb.on('animationcomplete', function() {
+            randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
+            gameState.bomb.anims.play(randBomb, true);
+        })
 
         gameState.ravegirl1.on('animationcomplete', function() {
             let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
