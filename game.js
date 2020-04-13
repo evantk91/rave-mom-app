@@ -276,7 +276,7 @@ class GameScene extends Phaser.Scene {
                 key: `bomb${i}`,
                 frames: this.anims.generateFrameNumbers(`bomb${i}`, {start: 0, end: 5}),
                 repeat: 0,
-                frameRate: 3
+                frameRate: 2
             })
         }
 
@@ -327,6 +327,7 @@ class GameScene extends Phaser.Scene {
                 gameState.bomb.destroy()
 
                 gameState.player.x = 111; gameState.player.y = 111;
+                gameState.player.setVelocityX(0); gameState.player.setVelocityY(0);
                 gameState.player.enable = false;
 
                 gameState.playerloses.x = playerX; gameState.playerloses.y = playerY;
@@ -511,11 +512,11 @@ class GameScene extends Phaser.Scene {
                 if(player.x <= 74) {
                     return 0;
                 } else if(player.x > 148 && player.x <= 222) {
-                    return 2;
+                    return 1;
                 } else if(player.x > 296 && player.x <= 370) {
-                    return 4;
+                    return 2;
                 } else {
-                    return 6;
+                    return 3;
                 }
             }
         } 
@@ -535,6 +536,10 @@ class GameScene extends Phaser.Scene {
             } else if(gameState.cursors.left.isDown && gameState.player.x >= 37) {
                 gameState.player.setVelocityX(-128);
                 gameState.player.anims.play('walk-left', true);
+            } else if(((gameState.cursors.up.isDown) && (gameState.cursors.right.isDown)) || ((gameState.cursors.up.isDown) && (gameState.cursors.left.isDown)) ||
+            ((gameState.cursors.down.isDown) && (gameState.cursors.right.isDown)) || ((gameState.cursors.down.isDown) && (gameState.cursors.left.isDown))) {
+                gameState.player.setVelocityX(0);
+                gameState.player.setVelocityY(0); 
             } else {
                 gameState.player.setVelocityX(0);
                 gameState.player.setVelocityY(0);   
