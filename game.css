@@ -1,6 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 * {
     box-sizing: border-box;
     background-color: black;
+}
+
+#nav-card-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background-image: url("IMG_2859.JPG");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100%;
+}
+
+#nav-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 300px;
+    height: 40%;
+    width: 50%;
+    border-style: solid;
+    border-color: greenyellow;
+    border-radius: 10%;
+    list-style: none;
+    box-shadow: 10px 5px 5px white;
+}
+
+.nav-bar-member {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 40%
+}
+
+h2 {
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.form-title {
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.form-field {
+    background-color: white;
 }
 
 #game-container {
@@ -11,7 +65,7 @@
 
 body, html {
     height:100%;
-    background-image: url("IMG_2859.JPG");
+    /* background-image: url("IMG_2859.JPG"); */
     height: 100%;
     background-position: center;
     background-repeat: no-repeat;
@@ -19,7 +73,7 @@ body, html {
 }
 
 canvas {
-    display: block;
+    display: none;
     margin-top: 0px;
     margin-left: auto;
     margin-right: auto;
