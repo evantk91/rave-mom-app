@@ -7,6 +7,29 @@
     <link rel="stylesheet" href="./game.css">
 </head>
 <body>
+    <nav id="nav-card-container">
+        <section id="nav-card">
+            <div class="nav-bar-member">
+                <h2>Welcome to Rave Mom</h2>
+            </div>
+            <div class="nav-bar-member">
+                <form id="new-user-signup">
+                    <h3 class="form-title">New User:</h3>
+                    <input type="text" name="username" placeholder="username" class="form-field" required>
+                    <input type="password" name="password" placeholder="password" class="form-field" required minlength="5">
+                    <input type="submit" value="Sign Up" id="new-user-signup-submit" class="form-field">
+                </form>
+            </div>
+            <div class="nav-bar-member">
+                <form id="user-login">
+                    <h3 class="form-title">Current User Login:</h3>
+                    <input type="text" name="username" placeholder="username" class="form-field">
+                    <input type="password" name="password" placeholder="password" class="form-field">
+                    <input type="submit" value="Login" id="user-login-submit" class="form-field">
+                </form>
+            </div>
+        </section>
+    </nav>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.16.2/dist/phaser.min.js"></script>
     <section id="game-container">
         <script src="./startmenu.js"></script>
