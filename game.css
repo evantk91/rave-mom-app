@@ -65,17 +65,64 @@ h2 {
 
 body, html {
     height:100%;
+    background-color: black;
+}
+
+#game-container {
+    display: none;
     background-image: url("IMG_2859.JPG");
+    flex-direction: column;
+    justify-content: center;
     height: 100%;
     background-position: center;
-    background-repeat: no-repeat;
+    background-repeat: repeat;
     background-size: cover;
 }
 
+#dashboard {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 300px;
+    margin-bottom: 50px;
+    padding-bottom: 20px;
+    width: 30%;
+    border-style: solid;
+    border-color: greenyellow;
+    border-radius: 10%;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.button {
+    background-color: white;
+    margin-top: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 60%;
+    font-size: 20px;
+    font-family: 'Press Start 2P', cursive;
+}
+
+#welcome-message {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+    align-items: center;
+}
+
 canvas {
-    display: none;
+    display: block;
     margin-top: 0px;
     margin-left: auto;
     margin-right: auto;
     padding-top: 50px;
+    border-style: solid;
+    border-color: greenyellow;
 }
