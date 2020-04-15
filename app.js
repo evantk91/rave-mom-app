@@ -24,8 +24,9 @@ userSignUp.addEventListener("submit", event => {
 
 const userLogin = document.querySelector("#user-login")
 const userLoginButton = document.querySelector("#user-login-submit")
+const navCardContainer = document.querySelector("#nav-card-container")
 const gameContainer = document.querySelector("#game-container")
-const gameCanvas = document.getElementsByTagName("CANVAS")
+const welcomeMessage = document.querySelector("#welcome-message")
 
 userLogin.addEventListener("submit", event => {
     event.preventDefault()
@@ -36,6 +37,8 @@ userLogin.addEventListener("submit", event => {
         username: formData.get("username"),
         password: formData.get("password")
     }
+
+    localStorage.setItem("username", user.username)
 
     fetch("http://localhost:3000/api/v1/login", {
         method: "POST",
@@ -61,7 +64,8 @@ function storeToken(response) {
 
 function displayGame(user) {
     if(localStorage.getItem("token")) {
-        gameCanvas.style.display = "block"
+        gameContainer.style.display = "flex"
         navCardContainer.style.display = "none"
+        welcomeMessage.textContent = `Welcome ${user.username}`
     }
 }
