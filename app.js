@@ -53,6 +53,14 @@ userLogin.addEventListener("submit", event => {
 
 })
 
+const logOutButton = document.querySelector("#user-logout");
+
+logOutButton.addEventListener("click", event => {
+    localStorage.removeItem("token");
+    gameContainer.style.display = "none";
+    navCardContainer.style.display = "flex"
+})
+
 function parseJSON(response) {
     return response.json()
 }
@@ -63,7 +71,7 @@ function storeToken(response) {
 }
 
 function displayGame(user) {
-    if(localStorage.getItem("token")) {
+    if(localStorage.getItem("token") !== "undefined") {
         gameContainer.style.display = "flex"
         navCardContainer.style.display = "none"
         welcomeMessage.textContent = `Welcome ${user.username}`

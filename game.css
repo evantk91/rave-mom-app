@@ -83,7 +83,7 @@ body, html {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: 300px;
+    margin-top: 200px;
     margin-bottom: 50px;
     padding-bottom: 20px;
     width: 30%;
@@ -123,6 +123,7 @@ canvas {
     margin-left: auto;
     margin-right: auto;
     padding-top: 50px;
+    margin-bottom: 50px;
     border-style: solid;
     border-color: greenyellow;
 }
