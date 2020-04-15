@@ -20,8 +20,8 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: 300px;
-    height: 40%;
+    margin-top: 150px;
+    height: 50%;
     width: 50%;
     border-style: solid;
     border-color: greenyellow;
@@ -65,7 +65,7 @@ h2 {
 
 body, html {
     height:100%;
-    /* background-image: url("IMG_2859.JPG"); */
+    background-image: url("IMG_2859.JPG");
     height: 100%;
     background-position: center;
     background-repeat: no-repeat;
