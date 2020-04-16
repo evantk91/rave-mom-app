@@ -60,13 +60,20 @@ function parseJSON(response) {
 function storeToken(response) {
     localStorage.setItem("token", response.token)
     localStorage.setItem("user_id", response.user_id)
-    listScores(response.scores)
+    let topScores = topTenScores(response.scores)
+    listScores(topScores)
+}
+
+function topTenScores(scores) {
+    let sortedScores = scores.sort((a, b) => (a.score < b.score) ? 1 : -1)
+    let topScores = sortedScores.slice(0, 10)
+    return topScores
 }
 
 function listScores(scores) {
     scores.map(score => {
         let scoreItem = document.createElement('li')
-        scoreItem.innerHTML = `<h1>${score.user} ${score.score}</h1>`
+        scoreItem.innerHTML = `<h1>${score.user_id} ${score.score}</h1>`
         leaderboard.appendChild(scoreItem)
     })
 }
