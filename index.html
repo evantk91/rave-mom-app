@@ -38,20 +38,6 @@
     <section id="game-container">
         <div id="dashboard">
             <h1 id="welcome-message"></h1>
-            <div class="button-container">
-                <button class="button" id="user-logout">Log Out</button>
-            </div>
-            <div class="button-container">
-                <button class="button" id="rules-button">Rules</button>
-            </div>
-            <div class="button-container">
-                <button class="button" id="leaderboard-button">Leaderboard</button>
-            </div>
-        </div>
-        <div id="canvas-container">
-        
-        </div>
-        <div id="rules-container">
             <div class="rule-container">
                 <h3 class="rules">You are your squad's only hope! They need water!</h3>
             </div>
@@ -62,8 +48,23 @@
                 <h3 class="rules">Avoid the lasers or you will be knocked out by the bass!</h3>
             </div>
             <div class="button-container">
-                <button id="close-rules-button">Close</button>
+                <button class="button" id="user-logout">Log Out</button>
+            </div> 
+        </div>
+        <div id="canvas-container">
+        </div>
+        <div id="leaderboard-container">
+            <div id="leaderboard-title-container">
+                <h1 id="leaderboard-title">Leaderboard:</h1>
             </div>
+            <table id="leaderboard">
+                <thead id="leaderboard-headers">
+                    <th class="lb-header">User</th>
+                    <th class="lb-header">Score</th>
+                </thead>
+                <tbody id="leaderboard-body">
+                </tbody>
+            </table>
         </div>
     </section>
 </body>
