@@ -23,3 +23,5 @@ Evan Greer
 Acknowledgments:
 
 Pipoya free RPG sprites (https://pipoya.itch.io/pipoya-free-rpg-character-sprites-32x32/devlog/108211/add-japanese-school-characters), Ahmed Gaber for the phaser 3 help (https://github.com/LimitToInfinity), Unsplash (https://unsplash.com/)
+
+![](demo.gif)
