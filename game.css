@@ -171,8 +171,12 @@ canvas {
 #leaderboard {
     width: 80%;
     align-items: center;
-    border-style: solid;
-    border-color: white;
+    list-style: none;
+}
+
+#leaderboard li{
+    color: white;
+    font-family: 'Press Start 2P', cursive;
 }
 
 #leaderboard-title-container {
@@ -184,18 +188,5 @@ canvas {
 #leaderboard-title {
     color: white;
     font-family: 'Press Start 2P', cursive;
-}
-
-#leaderboard-headers {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    border-style: solid;
-    border-color: white;
-}
-
-.lb-header {
-    width: 40%;
-    color: greenyellow;
-    font-family: 'Press Start 2P', cursive;
+    padding-left: 20px;
 }
