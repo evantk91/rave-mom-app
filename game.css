@@ -83,7 +83,7 @@ body, html {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: 200px;
+    margin-top: 100px;
     margin-bottom: 50px;
     padding-bottom: 20px;
     width: 30%;
@@ -117,13 +117,46 @@ body, html {
     align-items: center;
 }
 
+#rules-container {
+    display: none;
+    width: 40%;
+    margin-bottom: 30px;
+    border-style: solid;
+    border-color: greenyellow;
+}
+
+.rule-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+}
+
+.rules{
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-size: 12pt;
+}
+
+#close-rules-button {
+    background-color: white;
+    margin-top: 10px;
+    margin-bottom: 30px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 60%;
+    font-size: 20px;
+    font-family: 'Press Start 2P', cursive;
+}
+
 canvas {
     display: block;
     margin-top: 0px;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 100px;
     padding-top: 50px;
-    margin-bottom: 50px;
     border-style: solid;
     border-color: greenyellow;
 }
