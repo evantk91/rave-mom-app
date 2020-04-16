@@ -198,7 +198,8 @@ class GameScene extends Phaser.Scene {
         gameState.scoreText = this.add.text(200, 530, 'SCORE: 0', {fontSize: '30px', fill: '#FFFFFF'});
         gameState.gameEndText = this.add.text(75, 575, '', {fontSize: '30px', fill: '#FFFFFF'})
 
-        gameState.bomb = this.physics.add.sprite(256, 256, 'bomb', 0);
+        gameState.bomb1 = this.physics.add.sprite(256, 256, 'bomb1', 0);
+        gameState.bomb2 = this.physics.add.sprite(256, 256, 'bomb2', 0);
 
         let ravegirl1_x = setInitialRaveGirlPosition()[0]
         let ravegirl1_y = setInitialRaveGirlPosition()[1]
@@ -272,7 +273,7 @@ class GameScene extends Phaser.Scene {
                 key: `bomb${i}`,
                 frames: this.anims.generateFrameNumbers(`bomb${i}`, {start: 0, end: 5}),
                 repeat: 0,
-                frameRate: 2
+                frameRate: 3
             })
         }
 
@@ -303,24 +304,41 @@ class GameScene extends Phaser.Scene {
         gameState.ravegirl2.anims.play('ravegirl2', true)
         gameState.ravegirl3.anims.play('ravegirl3', true)
 
-        let randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
-        gameState.bomb.anims.play(randBomb, true)
+        let randBomb1 = `bomb${Math.floor(Math.random() * 40) + 1}`;
+        gameState.bomb1.anims.play(randBomb1, true)
+
+        let randBomb2 = `bomb${Math.floor(Math.random() * 40) + 1}`;
+        gameState.bomb2.anims.play(randBomb2, true)
 
         let playerX; 
         let playerY;
 
-        gameState.bomb.on('animationcomplete', function() {
+        gameState.bomb1.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
 
-            if(isArrayInArray(gameState.explosionPositions[randBomb], [playerX, playerY])) {
+            if(isArrayInArray(gameState.explosionPositions[randBomb1], [playerX, playerY])) {
                 gameState.scoreText.x = 60
                 gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
+
+                const result = {
+                    user_id: localStorage.getItem("user_id"),
+                    score: gameState.score
+                }
+
+                fetch("http://localhost:3000/api/v1/scores", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `bearer ${localStorage.getItem("token")}`
+                    },
+                    body: JSON.stringify(result)
+                })
                 
                 gameState.ravegirl1.anims.pause()
                 gameState.ravegirl2.anims.pause()
                 gameState.ravegirl3.anims.pause()
 
-                gameState.bomb.destroy()
+                gameState.bomb1.destroy()
 
                 gameState.player.x = 111; gameState.player.y = 111;
                 gameState.player.setVelocityX(0); gameState.player.setVelocityY(0);
@@ -332,8 +350,50 @@ class GameScene extends Phaser.Scene {
                 gameState.gameEnded = true;
 
             } else {
-                randBomb = `bomb${Math.floor(Math.random() * 40) + 1}`;
-                gameState.bomb.anims.play(randBomb, true);
+                randBomb1 = `bomb${Math.floor(Math.random() * 40) + 1}`;
+                gameState.bomb1.anims.play(randBomb1, true);
+            }
+        })
+
+        gameState.bomb2.on('animationcomplete', function() {
+            [playerX, playerY] = getPlayerGridPosition(gameState.player)
+
+            if(isArrayInArray(gameState.explosionPositions[randBomb2], [playerX, playerY])) {
+                gameState.scoreText.x = 60
+                gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
+
+                const result = {
+                    user_id: localStorage.getItem("user_id"),
+                    score: gameState.score
+                }
+
+                fetch("http://localhost:3000/api/v1/score", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `bearer ${localStorage.getItem("token")}`
+                    },
+                    body: JSON.stringify(result)
+                })
+                
+                gameState.ravegirl1.anims.pause()
+                gameState.ravegirl2.anims.pause()
+                gameState.ravegirl3.anims.pause()
+
+                gameState.bomb2.destroy()
+
+                gameState.player.x = 111; gameState.player.y = 111;
+                gameState.player.setVelocityX(0); gameState.player.setVelocityY(0);
+                gameState.player.enable = false;
+
+                gameState.playerloses.x = playerX; gameState.playerloses.y = playerY;
+                gameState.playerloses.anims.play('playerloses', true);
+                gameState.gameEndText.setText('CLICK TO PLAY AGAIN');
+                gameState.gameEnded = true;
+
+            } else {
+                randBomb2 = `bomb${Math.floor(Math.random() * 40) + 1}`;
+                gameState.bomb2.anims.play(randBomb2, true);
             }
         })
 
