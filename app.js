@@ -54,9 +54,6 @@ userLogin.addEventListener("submit", event => {
 })
 
 const logOutButton = document.querySelector("#user-logout");
-const rulesButton = document.querySelector("#rules-button");
-const rulesContainer = document.querySelector("#rules-container");
-const closeButton = document.querySelector("#close-rules-button");
 const dashboard = document.querySelector("#dashboard");
 const canvasContainer = document.querySelector("#canvas-container");
 
@@ -64,18 +61,6 @@ logOutButton.addEventListener("click", event => {
     localStorage.removeItem("token");
     gameContainer.style.display = "none";
     navCardContainer.style.display = "flex"
-})
-
-rulesButton.addEventListener("click", event => {
-    rulesContainer.style.display = "block";
-    dashboard.style.display = "none";
-    canvasContainer.style.display = "none";
-})
-
-closeButton.addEventListener("click", event => {
-    rulesContainer.style.display = "none";
-    dashboard.style.display = "flex";
-    canvasContainer.style.display = "block";
 })
 
 function parseJSON(response) {

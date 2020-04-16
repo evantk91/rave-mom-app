@@ -71,8 +71,8 @@ body, html {
 #game-container {
     display: none;
     background-image: url("IMG_2859.JPG");
-    flex-direction: column;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: space-evenly;
     height: 100%;
     background-position: center;
     background-repeat: repeat;
@@ -89,7 +89,6 @@ body, html {
     width: 30%;
     border-style: solid;
     border-color: greenyellow;
-    border-radius: 10%;
 }
 
 .button-container {
@@ -152,11 +151,51 @@ body, html {
 
 canvas {
     display: block;
-    margin-top: 0px;
+    margin-top: 0;
     margin-left: auto;
     margin-right: auto;
-    margin-bottom: 100px;
+    margin-bottom: 0;
     padding-top: 50px;
     border-style: solid;
     border-color: greenyellow;
+}
+
+#leaderboard-container {
+    display: block;
+    width: 30%;
+    margin-bottom: 30px;
+    border-style: solid;
+    border-color: greenyellow;
+}
+
+#leaderboard {
+    width: 80%;
+    align-items: center;
+    border-style: solid;
+    border-color: white;
+}
+
+#leaderboard-title-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#leaderboard-title {
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+}
+
+#leaderboard-headers {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    border-style: solid;
+    border-color: white;
+}
+
+.lb-header {
+    width: 40%;
+    color: greenyellow;
+    font-family: 'Press Start 2P', cursive;
 }
