@@ -27,6 +27,7 @@ const userLoginButton = document.querySelector("#user-login-submit")
 const navCardContainer = document.querySelector("#nav-card-container")
 const gameContainer = document.querySelector("#game-container")
 const welcomeMessage = document.querySelector("#welcome-message")
+const leaderboard = document.querySelector("#leaderboard")
 
 userLogin.addEventListener("submit", event => {
     event.preventDefault()
@@ -49,9 +50,41 @@ userLogin.addEventListener("submit", event => {
     })
     .then(parseJSON)
     .then(storeToken)
-    .then(() => displayGame(user)) 
-
+    .then(() => displayGame(user))  
 })
+
+function parseJSON(response) {
+    return response.json()
+}
+
+function storeToken(response) {
+    localStorage.setItem("token", response.token)
+    localStorage.setItem("user_id", response.user_id)
+    let topScores = topTenScores(response.scores)
+    listScores(topScores)
+}
+
+function topTenScores(scores) {
+    let sortedScores = scores.sort((a, b) => (a.score < b.score) ? 1 : -1)
+    let topScores = sortedScores.slice(0, 10)
+    return topScores
+}
+
+function listScores(scores) {
+    scores.map(score => {
+        let scoreItem = document.createElement('li')
+        scoreItem.innerHTML = `<h1>${score.user_id} ${score.score}</h1>`
+        leaderboard.appendChild(scoreItem)
+    })
+}
+
+function displayGame(user) {
+    if(localStorage.getItem("token") !== "undefined") {
+        gameContainer.style.display = "flex"
+        navCardContainer.style.display = "none"
+        welcomeMessage.textContent = `Welcome ${user.username}`
+    }
+}
 
 const logOutButton = document.querySelector("#user-logout");
 const dashboard = document.querySelector("#dashboard");
@@ -63,19 +96,3 @@ logOutButton.addEventListener("click", event => {
     navCardContainer.style.display = "flex"
 })
 
-function parseJSON(response) {
-    return response.json()
-}
-
-function storeToken(response) {
-    localStorage.setItem("token", response.token)
-    localStorage.setItem("user_id", response.user_id)
-}
-
-function displayGame(user) {
-    if(localStorage.getItem("token") !== "undefined") {
-        gameContainer.style.display = "flex"
-        navCardContainer.style.display = "none"
-        welcomeMessage.textContent = `Welcome ${user.username}`
-    }
-}
