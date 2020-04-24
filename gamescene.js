@@ -582,16 +582,16 @@ class GameScene extends Phaser.Scene {
     update() {
         if(gameState.player.enable) {
             if(gameState.cursors.down.isDown && gameState.player.y <= 481) {
-                gameState.player.setVelocityY(128);
+                gameState.player.setVelocityY(192);
                 gameState.player.anims.play('walk-down', true);
             } else if(gameState.cursors.up.isDown && gameState.player.y >= 37) {
-                gameState.player.setVelocityY(-128);
+                gameState.player.setVelocityY(-192);
                 gameState.player.anims.play('walk-up', true);
             } else if(gameState.cursors.right.isDown && gameState.player.x <= 481) { 
-                gameState.player.setVelocityX(128);
+                gameState.player.setVelocityX(192);
                 gameState.player.anims.play('walk-right', true);
             } else if(gameState.cursors.left.isDown && gameState.player.x >= 37) {
-                gameState.player.setVelocityX(-128);
+                gameState.player.setVelocityX(-192);
                 gameState.player.anims.play('walk-left', true);
             } else if(((gameState.cursors.up.isDown) && (gameState.cursors.right.isDown)) || ((gameState.cursors.up.isDown) && (gameState.cursors.left.isDown)) ||
             ((gameState.cursors.down.isDown) && (gameState.cursors.right.isDown)) || ((gameState.cursors.down.isDown) && (gameState.cursors.left.isDown))) {
