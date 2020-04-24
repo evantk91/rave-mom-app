@@ -161,7 +161,7 @@ canvas {
 }
 
 #leaderboard-container {
-    display: block;
+    display: none;
     width: 30%;
     margin-bottom: 30px;
     border-style: solid;
@@ -189,4 +189,12 @@ canvas {
     color: white;
     font-family: 'Press Start 2P', cursive;
     padding-left: 20px;
+}
+
+#leaderboard-update {
+    margin-bottom: 20px;
+}
+
+#leaderboard-close {
+    margin-bottom: 20px;
 }

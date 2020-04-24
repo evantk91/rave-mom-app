@@ -312,11 +312,12 @@ class GameScene extends Phaser.Scene {
 
         let playerX; 
         let playerY;
+        let scoreFlag = false;
 
         gameState.bomb1.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
 
-            if(isArrayInArray(gameState.explosionPositions[randBomb1], [playerX, playerY])) {
+            if(isArrayInArray(gameState.explosionPositions[randBomb1], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
                 gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
 
@@ -358,7 +359,7 @@ class GameScene extends Phaser.Scene {
         gameState.bomb2.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
 
-            if(isArrayInArray(gameState.explosionPositions[randBomb2], [playerX, playerY])) {
+            if(isArrayInArray(gameState.explosionPositions[randBomb2], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
                 gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
 
