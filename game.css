@@ -21,7 +21,7 @@
     flex-direction: column;
     justify-content: center;
     margin-top: 150px;
-    height: 50%;
+    height: 60%;
     width: 50%;
     border-style: solid;
     border-color: greenyellow;
@@ -40,7 +40,7 @@ form {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width: 40%
+    width: 80%
 }
 
 h2 {
@@ -49,6 +49,11 @@ h2 {
 }
 
 .form-title {
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+}
+
+#signup-message {
     color: white;
     font-family: 'Press Start 2P', cursive;
 }
