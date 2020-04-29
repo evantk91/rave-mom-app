@@ -316,17 +316,20 @@ class GameScene extends Phaser.Scene {
 
         gameState.bomb1.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
+            
 
             if(isArrayInArray(gameState.explosionPositions[randBomb1], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
                 gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
 
                 const result = {
-                    user_id: localStorage.getItem("user_id"),
-                    score: gameState.score
+                    score: {
+                        user_id: localStorage.getItem("user_id"),
+                        score: gameState.score
+                    }
                 }
 
-                fetch("http://localhost:3000/api/v1/scores", {
+                fetch("http://rave-mom-app.herokuapp.com/api/v1/scores", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -363,12 +366,14 @@ class GameScene extends Phaser.Scene {
                 gameState.scoreText.x = 60
                 gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
 
-                const result = {
-                    user_id: localStorage.getItem("user_id"),
-                    score: gameState.score
+                const result = { 
+                    score: {
+                        user_id: localStorage.getItem("user_id"),
+                        score: gameState.score
+                    }
                 }
 
-                fetch("http://localhost:3000/api/v1/scores", {
+                fetch("http://rave-mom-app.herokuapp.com/api/v1/scores", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
