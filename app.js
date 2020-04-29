@@ -92,6 +92,7 @@ logOutButton.addEventListener("click", event => {
     gameContainer.style.display = "none";
     navCardContainer.style.display = "flex"
     clearLeaderboard(leaderboard);
+    leaderboardButton.style.display = "flex"
 })
 
 leaderboardButton.addEventListener("click", event => {
