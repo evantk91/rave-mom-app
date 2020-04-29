@@ -103,6 +103,7 @@ body, html {
 }
 
 .button {
+    align-items: center; 
     background-color: white;
     margin-top: 10px;
     padding-top: 5px;
@@ -143,16 +144,6 @@ body, html {
     font-size: 12pt;
 }
 
-#close-rules-button {
-    background-color: white;
-    margin-top: 10px;
-    margin-bottom: 30px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    width: 60%;
-    font-size: 20px;
-    font-family: 'Press Start 2P', cursive;
-}
 
 canvas {
     display: block;
