@@ -329,7 +329,7 @@ class GameScene extends Phaser.Scene {
                     }
                 }
 
-                fetch("http://rave-mom-app.herokuapp.com/api/v1/scores", {
+                fetch("https://rave-mom-app.herokuapp.com/api/v1/scores", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -371,7 +371,7 @@ class GameScene extends Phaser.Scene {
 
         gameState.bomb2.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
-            const scoresURL = "http://rave-mom-app.herokuapp.com/api/v1/scores"
+            const scoresURL = "https://rave-mom-app.herokuapp.com/api/v1/scores"
 
             if(isArrayInArray(gameState.explosionPositions[randBomb2], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
