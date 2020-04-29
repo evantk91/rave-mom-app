@@ -92,7 +92,7 @@ logOutButton.addEventListener("click", event => {
     gameContainer.style.display = "none";
     navCardContainer.style.display = "flex"
     clearLeaderboard(leaderboard);
-    leaderboardButton.style.display = "flex"
+    leaderboardButton.style.display = "block"
 })
 
 leaderboardButton.addEventListener("click", event => {
@@ -109,7 +109,7 @@ leaderboardButton.addEventListener("click", event => {
 
 leaderboardClose.addEventListener("click", event => {
     leaderboardContainer.style.display = "none"
-    leaderboardButton.style.display = "flex"
+    leaderboardButton.style.display = "block"
 })
 
 function displayScores(response) {
