@@ -1,5 +1,6 @@
 const userSignUp = document.querySelector("#new-user-signup")
-const usersURL = "http://localhost:3000/api/v1/users"
+const signUpMessage = document.querySelector("#sign-up-message")
+const usersURL = "https://rave-mom-app.herokuapp.com/api/v1/users"
 
 localStorage.clear()
 
@@ -8,9 +9,11 @@ userSignUp.addEventListener("submit", event => {
 
     const formData = new FormData(event.target)
 
-    const user = {
-        username: formData.get("username"),
-        password: formData.get("password")
+    const user = { user: 
+        {
+            username: formData.get("username"),
+            password: formData.get("password")
+        }    
     }
 
     fetch(usersURL, {
@@ -20,6 +23,8 @@ userSignUp.addEventListener("submit", event => {
         },
         body: JSON.stringify(user)
     })
+
+    signUpMessage.textContent = `ya signed up, ${user.user.username}`
 })
 
 const userLogin = document.querySelector("#user-login")
@@ -28,6 +33,8 @@ const navCardContainer = document.querySelector("#nav-card-container")
 const gameContainer = document.querySelector("#game-container")
 const welcomeMessage = document.querySelector("#welcome-message")
 const leaderboard = document.querySelector("#leaderboard")
+
+const loginURL = "https://rave-mom-app.herokuapp.com/api/v1/login"
 
 userLogin.addEventListener("submit", event => {
     event.preventDefault()
@@ -42,7 +49,7 @@ userLogin.addEventListener("submit", event => {
     localStorage.setItem("username", user.username)
     localStorage.setItem("password", user.password)
 
-    fetch("http://localhost:3000/api/v1/login", {
+    fetch(loginURL, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -78,6 +85,8 @@ const leaderboardButton = document.querySelector("#leaderboard-button");
 const leaderboardContainer = document.querySelector("#leaderboard-container");
 const leaderboardClose = document.querySelector("#leaderboard-close");
 
+const scoresURL = "https://rave-mom-app.herokuapp.com/api/v1/scores"
+
 logOutButton.addEventListener("click", event => {
     localStorage.removeItem("token");
     gameContainer.style.display = "none";
@@ -88,7 +97,7 @@ logOutButton.addEventListener("click", event => {
 leaderboardButton.addEventListener("click", event => {
     clearLeaderboard(leaderboard);
     leaderboardContainer.style.display = "block"
-    fetch("http://localhost:3000/api/v1/scores", {
+    fetch(scoresURL, {
         headers: {
             "Authorization": `bearer ${localStorage.getItem("token")}`
         }
@@ -99,11 +108,13 @@ leaderboardButton.addEventListener("click", event => {
 
 leaderboardClose.addEventListener("click", event => {
     leaderboardContainer.style.display = "none"
+    leaderboardButton.style.display = "flex"
 })
 
 function displayScores(response) {
     let topScores = topTenScores(response)
     topScores.map(score => appendScore(score))
+    leaderboardButton.style.display = "none"
 }
 
 function topTenScores(scores) {
