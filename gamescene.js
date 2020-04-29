@@ -316,7 +316,7 @@ class GameScene extends Phaser.Scene {
 
         gameState.bomb1.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
-            
+            const scoresURL = "https://rave-mom-app.herokuapp.com/api/v1/scores"
 
             if(isArrayInArray(gameState.explosionPositions[randBomb1], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
@@ -329,7 +329,7 @@ class GameScene extends Phaser.Scene {
                     }
                 }
 
-                fetch("https://rave-mom-app.herokuapp.com/api/v1/scores", {
+                fetch(scoresURL, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -337,16 +337,6 @@ class GameScene extends Phaser.Scene {
                     },
                     body: JSON.stringify(result)
                 })
-
-                clearLeaderboard(leaderboard);
-
-                fetch(scoresURL, {
-                    headers: {
-                        "Authorization": `bearer ${localStorage.getItem("token")}`
-                    }
-                })
-                .then(parseJSON)
-                .then(response => displayScores(response))
                 
                 gameState.ravegirl1.anims.pause()
                 gameState.ravegirl2.anims.pause()
@@ -393,16 +383,6 @@ class GameScene extends Phaser.Scene {
                     body: JSON.stringify(result)
                 })
 
-                clearLeaderboard(leaderboard);
-
-                fetch(scoresURL, {
-                    headers: {
-                        "Authorization": `bearer ${localStorage.getItem("token")}`
-                    }
-                })
-                .then(parseJSON)
-                .then(response => displayScores(response))
-                
                 gameState.ravegirl1.anims.pause()
                 gameState.ravegirl2.anims.pause()
                 gameState.ravegirl3.anims.pause()
@@ -428,6 +408,16 @@ class GameScene extends Phaser.Scene {
             if(gameState.gameEnded === true) {
                 gameState.score = 0;
                 this.scene.restart();
+
+                clearLeaderboard(leaderboard);
+
+                fetch(scoresURL, {
+                    headers: {
+                        "Authorization": `bearer ${localStorage.getItem("token")}`
+                    }
+                })
+                .then(parseJSON)
+                .then(response => displayScores(response))
             }
         })
 
