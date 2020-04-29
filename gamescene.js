@@ -337,6 +337,16 @@ class GameScene extends Phaser.Scene {
                     },
                     body: JSON.stringify(result)
                 })
+
+                clearLeaderboard(leaderboard);
+
+                fetch(scoresURL, {
+                    headers: {
+                        "Authorization": `bearer ${localStorage.getItem("token")}`
+                    }
+                })
+                .then(parseJSON)
+                .then(response => displayScores(response))
                 
                 gameState.ravegirl1.anims.pause()
                 gameState.ravegirl2.anims.pause()
@@ -361,6 +371,7 @@ class GameScene extends Phaser.Scene {
 
         gameState.bomb2.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
+            const scoresURL = "http://rave-mom-app.herokuapp.com/api/v1/scores"
 
             if(isArrayInArray(gameState.explosionPositions[randBomb2], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
@@ -373,7 +384,7 @@ class GameScene extends Phaser.Scene {
                     }
                 }
 
-                fetch("http://rave-mom-app.herokuapp.com/api/v1/scores", {
+                fetch(scoresURL, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -381,6 +392,16 @@ class GameScene extends Phaser.Scene {
                     },
                     body: JSON.stringify(result)
                 })
+
+                clearLeaderboard(leaderboard);
+
+                fetch(scoresURL, {
+                    headers: {
+                        "Authorization": `bearer ${localStorage.getItem("token")}`
+                    }
+                })
+                .then(parseJSON)
+                .then(response => displayScores(response))
                 
                 gameState.ravegirl1.anims.pause()
                 gameState.ravegirl2.anims.pause()
@@ -521,6 +542,10 @@ class GameScene extends Phaser.Scene {
             gameState.scoreText.setText(`SCORE: ${gameState.score}`);
         })
 
+        function parseJSON(response) {
+            return response.json()
+        }
+
         function isArrayInArray(arr, item) {
             var itemStr = JSON.stringify(item);
             var contains = arr.some(function(ele) {
@@ -581,7 +606,32 @@ class GameScene extends Phaser.Scene {
                     return 3;
                 }
             }
-        } 
+        }
+        
+        function clearLeaderboard(leaderboard) {
+            while(leaderboard.firstChild) {
+                leaderboard.removeChild(leaderboard.firstChild);
+            }
+        }
+
+        function displayScores(response) {
+            let topScores = topTenScores(response)
+            topScores.map(score => appendScore(score))
+            leaderboardButton.style.display = "none"
+        }
+        
+        function topTenScores(scores) {
+            let sortedScores = scores.sort((a, b) => (b.score - a.score))
+            let topScores = sortedScores.slice(0, 10)
+            return topScores
+        }
+        
+        function appendScore(score) {
+            let scoreItem = document.createElement('li')
+            scoreItem.innerHTML = `<h1>${score.user.username} ${score.score}</h1>`
+            leaderboard.appendChild(scoreItem)
+        }
+        
     }
     
     update() {
