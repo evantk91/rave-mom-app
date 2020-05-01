@@ -4,7 +4,7 @@ Rave mom is a one player survival game written in Phaser 3 and Ruby on Rails. Yo
 
 How to start game:
 
-1. To run the game locally, fork and clone "rave-mom-app" along with the corresponding backend built in "rave-mom-api" (https://github.com/evantk91/rave-mom-api)
+1. To run the game locally, fork and clone "rave-mom-app" along with the corresponding backend "rave-mom-api" (https://github.com/evantk91/rave-mom-api)
 2. Run "bundle install" to install the appropriate gems.
 3. Run the rails server using the command "rails s" and run the front end using lite-server or equivalent.
 
