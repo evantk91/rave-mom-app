@@ -1,8 +1,6 @@
 # Rave Mom: Phaser Game
 
-Description:
-
-Rave mom is a one player survival game. You are your squad's only hope! Feed them water to score points. Avoid the festival lasers or you will be knocked out by the intense bass music!
+Rave mom is a one player survival game written in Phaser 3 and Ruby on Rails. You are your squad's only hope! Feed them water to score points. Avoid the festival lasers or you will be knocked out by the intense bass music!
 
 How to start game:
 
