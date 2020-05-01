@@ -8,7 +8,7 @@ How to start game:
 2. Run "bundle install" to install the appropriate gems.
 3. Run the rails server using the command "rails s" and run the front end using lite-server or equivalent.
 
-The game will be hosted on Heroku and Google Firebase soon.
+Rave Mom is hosted on Google Firebase here => https://rave-mom.firebaseapp.com/
 
 Built With:
 
@@ -16,7 +16,7 @@ Phaser 3, JavaScript, Ruby (2.6.1), Rails (6.0.2), postgresql 12, Asesprite (v1.
 
 Authors:
 
-Evan Greer
+Evan Greer (email: etgreer91@gmail.com, linkedIn: https://www.linkedin.com/in/evantkgreer/)
 
 Acknowledgments:
 
