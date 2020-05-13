@@ -23,9 +23,17 @@ userSignUp.addEventListener("submit", event => {
         },
         body: JSON.stringify(user)
     })
-
-    signUpMessage.textContent = `ya signed up, ${user.user.username}`
+    .then(parseJSON)
+    .then(displaySignUpMessage)
 })
+
+function displaySignUpMessage(response) {
+    if(response.error === undefined) {
+        signUpMessage.textContent = "Ya, Signed Up!"
+    } else {
+        signUpMessage.textContent = "User Already Exists"
+    }
+}
 
 const userLogin = document.querySelector("#user-login")
 const userLoginButton = document.querySelector("#user-login-submit")
