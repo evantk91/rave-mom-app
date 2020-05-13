@@ -607,7 +607,6 @@ class GameScene extends Phaser.Scene {
         function displayScores(response) {
             let topScores = topTenScores(response)
             topScores.map(score => appendScore(score))
-            leaderboardButton.style.display = "none"
         }
         
         function topTenScores(scores) {
