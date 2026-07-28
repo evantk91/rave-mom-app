@@ -1,6 +1,6 @@
 const userSignUp = document.querySelector("#new-user-signup")
 const signUpMessage = document.querySelector("#sign-up-message")
-const usersURL = "https://rave-mom-app.herokuapp.com/api/v1/users"
+const usersURL = "https://rave-mom-api.onrender.com/api/v1/users"
 
 localStorage.clear()
 
@@ -42,7 +42,7 @@ const gameContainer = document.querySelector("#game-container")
 const welcomeMessage = document.querySelector("#welcome-message")
 const leaderboard = document.querySelector("#leaderboard")
 
-const loginURL = "https://rave-mom-app.herokuapp.com/api/v1/login"
+const loginURL = "https://rave-mom-api.onrender.com/api/v1/login"
 
 userLogin.addEventListener("submit", event => {
     event.preventDefault()
@@ -93,7 +93,7 @@ const leaderboardButton = document.querySelector("#leaderboard-button");
 const leaderboardContainer = document.querySelector("#leaderboard-container");
 const leaderboardClose = document.querySelector("#leaderboard-close");
 
-const scoresURL = "https://rave-mom-app.herokuapp.com/api/v1/scores"
+const scoresURL = "https://rave-mom-api.onrender.com/api/v1/scores"
 
 logOutButton.addEventListener("click", event => {
     localStorage.removeItem("token");
