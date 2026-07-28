@@ -316,7 +316,7 @@ class GameScene extends Phaser.Scene {
 
         gameState.bomb1.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
-            const scoresURL = "https://rave-mom-app.herokuapp.com/api/v1/scores"
+            const scoresURL = "https://rave-mom-api.onrender.com/api/v1/scores"
 
             if(isArrayInArray(gameState.explosionPositions[randBomb1], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
@@ -361,7 +361,7 @@ class GameScene extends Phaser.Scene {
 
         gameState.bomb2.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
-            const scoresURL = "https://rave-mom-app.herokuapp.com/api/v1/scores"
+            const scoresURL = "https://rave-mom-api.onrender.com/api/v1/scores"
 
             if(isArrayInArray(gameState.explosionPositions[randBomb2], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
