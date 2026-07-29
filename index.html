@@ -4,6 +4,7 @@
     <script src="./session-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./shared.css">
     <link rel="stylesheet" href="./game.css">
     <link rel="shortcut icon" type="image/png" href="assets/icons/favicon.png"/>
     <script src="./dashboard.js" defer></script>
@@ -15,7 +16,7 @@
     <script src="./gamescene.js"></script>
     <script src="./game.js"></script>
     <section id="game-container">
-        <div id="dashboard">
+        <div id="dashboard" class="panel">
             <h1 id="welcome-message"></h1>
             <div class="rule-container">
                 <h3 class="rules">You are your squad's only hope! They need water!</h3>
@@ -34,16 +35,6 @@
             </div>
         </div>
         <div id="canvas-container">
-        </div>
-        <div id="leaderboard-container">
-            <div id="leaderboard-title-container">
-                <h1 id="leaderboard-title">Leaderboard:</h1>
-            </div>
-            <ul id="leaderboard">
-            </ul>
-            <div class="button-container">
-                <button class="button" id="leaderboard-close">Close</button>
-            </div>
         </div>
     </section>
 </body>
