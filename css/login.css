@@ -1,10 +1,10 @@
-/* Styles for login.html only. Shared rules live in shared.css. */
+/* Styles for login.html only. Shared rules live in css/shared.css. */
 
 #nav-card-container {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    background-image: url("assets/images/IMG_2859.JPG");
+    background-image: url("../assets/images/IMG_2859.JPG");
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
