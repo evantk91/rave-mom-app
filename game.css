@@ -1,116 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-* {
-    box-sizing: border-box;
-    background-color: black;
-}
-
-#nav-card-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    background-image: url("assets/images/IMG_2859.JPG");
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    height: 100%;
-}
-
-#nav-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-top: 150px;
-    height: 60%;
-    width: 50%;
-    border-style: solid;
-    border-color: greenyellow;
-    border-radius: 10%;
-    list-style: none;
-    box-shadow: 10px 5px 5px white;
-}
-
-.nav-bar-member {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 80%
-}
-
-h2 {
-    color: white;
-    font-family: 'Press Start 2P', cursive;
-}
-
-.form-title {
-    color: white;
-    font-family: 'Press Start 2P', cursive;
-}
-
-#sign-up-message {
-    color: white;
-    font-family: 'Press Start 2P', cursive;
-}
-
-.form-field {
-    background-color: white;
-}
+/* Styles for the game page (index.html) only. Shared rules live in shared.css. */
 
 #game-container {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-body, html {
-    height:100%;
-    background-color: black;
-}
-
-#game-container {
-    display: flex;
-    background-image: url("assets/images/IMG_2859.JPG");
     flex-direction: row;
     justify-content: space-evenly;
+    align-items: center;
     height: 100%;
+    background-image: url("assets/images/IMG_2859.JPG");
     background-position: center;
     background-repeat: repeat;
     background-size: cover;
 }
 
+/* Sized by .panel in shared.css so it matches the canvas exactly. */
 #dashboard {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: 100px;
-    margin-bottom: 50px;
     padding-bottom: 20px;
-    width: 30%;
-    border-style: solid;
-    border-color: greenyellow;
-}
-
-.button-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-.button {
-    align-items: center; 
-    background-color: white;
-    margin-top: 10px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    width: 60%;
-    font-size: 20px;
-    font-family: 'Press Start 2P', cursive;
 }
 
 #welcome-message {
@@ -120,14 +27,6 @@ body, html {
     color: white;
     font-family: 'Press Start 2P', cursive;
     align-items: center;
-}
-
-#rules-container {
-    display: none;
-    width: 40%;
-    margin-bottom: 30px;
-    border-style: solid;
-    border-color: greenyellow;
 }
 
 .rule-container {
@@ -144,53 +43,22 @@ body, html {
     font-size: 12pt;
 }
 
-
 canvas {
     display: block;
-    margin-top: 0;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 0;
-    padding-top: 50px;
-    border-style: solid;
-    border-color: greenyellow;
+    margin: 0 auto;
+    border: var(--panel-border) solid var(--panel-border-color);
 }
 
-#leaderboard-container {
-    display: none;
-    width: 30%;
-    margin-bottom: 30px;
-    border-style: solid;
-    border-color: greenyellow;
+/* Both buttons stay hidden through the start menu and active play, and are
+   revealed once the knocked-out animation has looped: gamescene.js toggles
+   `game-over` on <body>. Using visibility rather than display keeps their
+   space reserved, so the dashboard's contents don't shift when they appear. */
+#user-logout,
+#leaderboard-button {
+    visibility: hidden;
 }
 
-#leaderboard {
-    width: 80%;
-    align-items: center;
-    list-style: none;
-}
-
-#leaderboard li{
-    color: white;
-    font-family: 'Press Start 2P', cursive;
-}
-
-#leaderboard-title-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-#leaderboard-title {
-    color: white;
-    font-family: 'Press Start 2P', cursive;
-    padding-left: 20px;
-}
-
-#leaderboard-update {
-    margin-bottom: 20px;
-}
-
-#leaderboard-close {
-    margin-bottom: 20px;
+body.game-over #user-logout,
+body.game-over #leaderboard-button {
+    visibility: visible;
 }

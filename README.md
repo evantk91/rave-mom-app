@@ -8,6 +8,8 @@ How to start game:
 2. Run "bundle install" to install the appropriate gems.
 3. Run the rails server using the command "rails s" and run the front end using lite-server or equivalent.
 
+The front end is three static pages: `login.html` (signup and login), `index.html` (the game), and `leaderboard.html` (top ten scores).
+
 Rave Mom is hosted on Google Firebase here => https://rave-mom.firebaseapp.com/
 
 Built With:
