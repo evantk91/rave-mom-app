@@ -13,8 +13,8 @@ class GameScene extends Phaser.Scene {
         this.load.spritesheet('heart','./sprite_sheets/png_sheets/Heart.png', {frameWidth: 74, frameHeight: 74})
         this.load.spritesheet('playerloses', './sprite_sheets/png_sheets/raver_player_loses.png', {frameWidth: 74, frameHeight: 74})
 
-        this.load.image('bg', './free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
-        this.load.image('block', './Level-barriers.png')
+        this.load.image('bg', './assets/images/free-to-use-sounds-Qgq7j_QCYtw-unsplash.jpg')
+        this.load.image('block', './assets/images/Level-barriers.png')
 
         for(var i = 1; i <= 40; i++) {
             this.load.spritesheet(`bomb${i}`, `./sprite_sheets/png_sheets/bomb${i}.png`, {frameWidth: 518, frameHeight: 518})
