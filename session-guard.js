@@ -1,5 +1,6 @@
-// Runs before anything else on index.html: if there's no valid session,
-// bounce to the login page before Phaser or the game scripts ever load.
+// Runs before anything else on index.html and leaderboard.html: if there's no
+// valid session, bounce to the login page before Phaser, the game scripts, or
+// any page content ever load.
 // Wrapped in an IIFE so these locals never collide with the globals the
 // other scripts on this page share.
 (function() {

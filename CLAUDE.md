@@ -10,7 +10,7 @@ Live site: https://rave-mom.firebaseapp.com/
 
 ## Running the project
 
-There is no build step, bundler, or package manager (no `package.json`). This is plain static HTML/CSS/JS loaded via `<script>` tags across two pages — `login.html` (signup/login) and `index.html` (game/leaderboard) — with Phaser 3 pulled from a CDN.
+There is no build step, bundler, or package manager (no `package.json`). This is plain static HTML/CSS/JS loaded via `<script>` tags across three pages — `login.html` (signup/login), `index.html` (game), and `leaderboard.html` (top-ten scores) — with Phaser 3 pulled from a CDN.
 
 To run locally:
 1. Also clone and run the backend, `rave-mom-api` — `bundle install` then `rails s`.
@@ -25,13 +25,21 @@ Hosted on Firebase Hosting (`firebase.json`, `.firebaserc`, project `rave-mom`).
 ## Architecture
 
 ### Frontend/backend split
-All game logic and UI live here; all persistence (users, auth tokens, scores) lives in the Rails API. The frontend talks to the backend over hardcoded URLs (e.g. `https://rave-mom-api.onrender.com/api/v1/users`, `/login`, `/scores`) — there's no env-based config, so backend URL changes require editing `login.js`, `dashboard.js`, and `gamescene.js` directly (`gamescene.js` re-declares `scoresURL` inline in each of its two bomb handlers).
+All game logic and UI live here; all persistence (users, auth tokens, scores) lives in the Rails API. The frontend talks to the backend over hardcoded URLs (e.g. `https://rave-mom-api.onrender.com/api/v1/users`, `/login`, `/scores`) — there's no env-based config, so backend URL changes require editing `login.js`, `leaderboard.js`, and `gamescene.js` directly (`gamescene.js` re-declares `scoresURL` inline in each of its two bomb handlers).
 
-Auth state is kept client-side in `localStorage` (`token`, `user_id`, `username`, `password`). Which page you're on determines how that state is treated: `login.js` clears all of `localStorage` on every load, so a fresh visit to the login page always starts clean; `index.html`'s scripts only ever *read* it, and clear it only on logout before navigating back to `login.html`. Requests to protected endpoints send `Authorization: bearer <token>`.
+Auth state is kept client-side in `localStorage` (`token`, `user_id`, `username`, `password`). Which page you're on determines how that state is treated: `login.js` clears all of `localStorage` on every load, so a fresh visit to the login page always starts clean; the scripts on `index.html` and `leaderboard.html` only ever *read* it, and clear it only on logout before navigating back to `login.html`. Requests to protected endpoints send `Authorization: bearer <token>`.
 
 ### Page split & session flow
 - `login.html` — signup and login forms only. A successful login stores the session in `localStorage` and then does a real navigation (`window.location.href`) to `index.html`. Signup deliberately does *not* auto-navigate; it shows an inline message and requires a separate manual login.
-- `index.html` — game and leaderboard only. `session-guard.js` redirects back to `login.html` if there's no valid session.
+- `index.html` — the game only. `session-guard.js` redirects back to `login.html` if there's no valid session.
+- `leaderboard.html` — top-ten scores only, with a "Return to Game" button. Also guarded by `session-guard.js`. It deliberately does *not* load `login.js`, which would clear the session on load.
+
+Navigating to the leaderboard unloads Phaser and discards an in-progress game, so the Leaderboard button is only offered after a game over — see the button visibility handoff below.
+
+### Stylesheets
+One shared stylesheet plus one per page; each page loads exactly two. `shared.css` holds the Google Fonts `@import` (which must stay the first rule in the file or CSS ignores it), the `*` reset, `body/html`, button and form-field styling, and the `.panel` sizing shared by the dashboard, canvas, and leaderboard. `login.css`, `game.css`, and `leaderboard.css` hold only their own page's rules.
+
+The `.panel` custom properties in `shared.css` are derived from the canvas's *outer* box (the 518x632 bitmap in `game.js` plus its border), so the dashboard and leaderboard match the canvas without the canvas itself being scaled — scaling it would blur the pixel art.
 
 ### Script load order (in `index.html`)
 Global scripts, no modules/bundler — load order matters and all state hangs off the global `gameState` object defined in `game.js`:
@@ -40,11 +48,18 @@ Global scripts, no modules/bundler — load order matters and all state hangs of
 3. `startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
 4. `gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
 5. `game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
-6. `dashboard.js` — welcome message, logout, leaderboard fetch/render. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above, exactly where the old `app.js` used to run.
+6. `dashboard.js` — welcome message, logout, and navigation to the leaderboard. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above.
 
-Note that steps 2–5 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script. `gamescene.js` reaches across this shared global scope for `dashboard.js`'s top-level `leaderboard` and `scoresURL` bindings in its restart handler, so those two declarations must stay top-level and keep those exact names.
+Note that steps 2–5 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script.
 
-`login.html` has no such subtlety — it loads only `login.js`, deferred.
+`login.html` and `leaderboard.html` have no such subtlety — each loads a single deferred script (`login.js` / `leaderboard.js`), with `session-guard.js` first and blocking on the latter.
+
+### Game-over button visibility
+The Leaderboard and Log Out buttons are hidden during play and revealed after a game over. The buttons live in `index.html`'s dashboard markup, but only `GameScene` knows when the game ended, so the handoff goes through a `game-over` class on `<body>`: `gamescene.js` adds it, `game.css` decides what it means. Neither script touches the other's scope.
+
+Two details are load-bearing:
+- The reveal hangs off `gameState.playerloses.once('animationrepeat', ...)`, **not** `animationcomplete`. The `playerloses` animation is created with `repeat: -1`, so it never completes and `animationcomplete` would never fire; `animationrepeat` fires when the first loop ends.
+- `game.css` uses `visibility: hidden` rather than `display: none`, so the hidden buttons still reserve their space and the dashboard doesn't shift when they appear.
 
 ### Game grid & bomb system (`gamescene.js`)
 This is the most complex part of the codebase and the most likely place for future changes:
