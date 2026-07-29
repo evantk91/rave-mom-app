@@ -1,4 +1,4 @@
-/* Styles for leaderboard.html only. Shared rules live in shared.css. */
+/* Styles for leaderboard.html only. Shared rules live in css/shared.css. */
 
 #leaderboard-page {
     display: flex;
@@ -6,7 +6,7 @@
     justify-content: center;
     align-items: center;
     height: 100%;
-    background-image: url("assets/images/IMG_2859.JPG");
+    background-image: url("../assets/images/IMG_2859.JPG");
     background-position: center;
     background-repeat: repeat;
     background-size: cover;
