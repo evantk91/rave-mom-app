@@ -1,3 +1,7 @@
+# macOS Finder metadata. Recreated locally whenever Finder opens a folder,
+# so these are untracked rather than deleted.
+.DS_Store
+
 # Logs
 logs
 *.log
