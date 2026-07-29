@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Panel geometry. The game canvas is 518x632 (see config in game.js), and the
+   dashboard and leaderboard are sized to match its *outer* box so every panel
+   across the site is the same size. Sizing off the outer box rather than the
+   bitmap means the canvas is never scaled, which would blur the pixel art. */
+:root {
+    --panel-border: 3px;
+    --panel-border-color: greenyellow;
+    --panel-width: 518px;
+    --panel-height: 632px;
+    --panel-outer-width: calc(var(--panel-width) + var(--panel-border) * 2);
+    --panel-outer-height: calc(var(--panel-height) + var(--panel-border) * 2);
+}
+
+* {
+    box-sizing: border-box;
+    background-color: black;
+}
+
+body, html {
+    height: 100%;
+    background-color: black;
+}
+
+.panel {
+    width: var(--panel-outer-width);
+    height: var(--panel-outer-height);
+    border: var(--panel-border) solid var(--panel-border-color);
+}
+
+.button-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.button {
+    align-items: center;
+    background-color: white;
+    margin-top: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 60%;
+    font-size: 20px;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.form-field {
+    background-color: white;
+}

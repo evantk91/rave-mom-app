@@ -350,6 +350,7 @@ class GameScene extends Phaser.Scene {
 
                 gameState.playerloses.x = playerX; gameState.playerloses.y = playerY;
                 gameState.playerloses.anims.play('playerloses', true);
+                gameState.playerloses.once('animationrepeat', revealGameOverButtons);
                 gameState.gameEndText.setText('CLICK TO PLAY AGAIN');
                 gameState.gameEnded = true;
 
@@ -395,6 +396,7 @@ class GameScene extends Phaser.Scene {
 
                 gameState.playerloses.x = playerX; gameState.playerloses.y = playerY;
                 gameState.playerloses.anims.play('playerloses', true);
+                gameState.playerloses.once('animationrepeat', revealGameOverButtons);
                 gameState.gameEndText.setText('CLICK TO PLAY AGAIN');
                 gameState.gameEnded = true;
 
@@ -407,17 +409,8 @@ class GameScene extends Phaser.Scene {
         this.input.on('pointerup', () => {
             if(gameState.gameEnded === true) {
                 gameState.score = 0;
+                hideGameOverButtons();
                 this.scene.restart();
-
-                clearLeaderboard(leaderboard);
-
-                fetch(scoresURL, {
-                    headers: {
-                        "Authorization": `bearer ${localStorage.getItem("token")}`
-                    }
-                })
-                .then(parseJSON)
-                .then(response => displayScores(response))
             }
         })
 
@@ -532,10 +525,6 @@ class GameScene extends Phaser.Scene {
             gameState.scoreText.setText(`SCORE: ${gameState.score}`);
         })
 
-        function parseJSON(response) {
-            return response.json()
-        }
-
         function isArrayInArray(arr, item) {
             var itemStr = JSON.stringify(item);
             var contains = arr.some(function(ele) {
@@ -598,29 +587,18 @@ class GameScene extends Phaser.Scene {
             }
         }
         
-        function clearLeaderboard(leaderboard) {
-            while(leaderboard.firstChild) {
-                leaderboard.removeChild(leaderboard.firstChild);
-            }
+        // The Leaderboard and Log Out buttons live in the dashboard markup, but
+        // only this scene knows when the game has ended. Toggling a class on
+        // <body> hands that off without either script reaching into the other's
+        // scope; game.css decides what the class means.
+        function revealGameOverButtons() {
+            document.body.classList.add('game-over');
         }
 
-        function displayScores(response) {
-            let topScores = topTenScores(response)
-            topScores.map(score => appendScore(score))
+        function hideGameOverButtons() {
+            document.body.classList.remove('game-over');
         }
-        
-        function topTenScores(scores) {
-            let sortedScores = scores.sort((a, b) => (b.score - a.score))
-            let topScores = sortedScores.slice(0, 10)
-            return topScores
-        }
-        
-        function appendScore(score) {
-            let scoreItem = document.createElement('li')
-            scoreItem.innerHTML = `<h1>${score.user.username} ${score.score}</h1>`
-            leaderboard.appendChild(scoreItem)
-        }
-        
+
     }
     
     update() {

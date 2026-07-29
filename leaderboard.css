@@ -1,0 +1,51 @@
+/* Styles for leaderboard.html only. Shared rules live in shared.css. */
+
+#leaderboard-page {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    background-image: url("assets/images/IMG_2859.JPG");
+    background-position: center;
+    background-repeat: repeat;
+    background-size: cover;
+}
+
+/* Sized by .panel in shared.css so it matches the game canvas. */
+#leaderboard-container {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+}
+
+#leaderboard-title-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#leaderboard-title {
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+    padding-left: 20px;
+}
+
+/* Only the list scrolls, so the title and Return to Game button stay put
+   even when a full top ten overruns the panel height. */
+#leaderboard {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0 auto 10px auto;
+    width: 80%;
+    list-style: none;
+}
+
+#leaderboard li{
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+}
+
+#return-to-game {
+    margin-bottom: 20px;
+}
