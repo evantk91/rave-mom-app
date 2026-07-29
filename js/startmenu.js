@@ -4,6 +4,7 @@ class StartMenu extends Phaser.Scene {
     }
 
     preload() {
+        // Relative to index.html at the repo root, not to this file in js/.
         this.load.spritesheet('startmenu', './sprite_sheets/png_sheets/start_menu.png', { frameWidth: 518, frameHeight: 666 })
     }
 

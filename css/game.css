@@ -1,4 +1,4 @@
-/* Styles for the game page (index.html) only. Shared rules live in shared.css. */
+/* Styles for the game page (index.html) only. Shared rules live in css/shared.css. */
 
 #game-container {
     display: flex;
@@ -6,7 +6,7 @@
     justify-content: space-evenly;
     align-items: center;
     height: 100%;
-    background-image: url("assets/images/IMG_2859.JPG");
+    background-image: url("../assets/images/IMG_2859.JPG");
     background-position: center;
     background-repeat: repeat;
     background-size: cover;
@@ -50,7 +50,7 @@ canvas {
 }
 
 /* Both buttons stay hidden through the start menu and active play, and are
-   revealed once the knocked-out animation has looped: gamescene.js toggles
+   revealed once the knocked-out animation has looped: js/gamescene.js toggles
    `game-over` on <body>. Using visibility rather than display keeps their
    space reserved, so the dashboard's contents don't shift when they appear. */
 #user-logout,
