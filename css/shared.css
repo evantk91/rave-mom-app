@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-/* Panel geometry. The game canvas is 518x632 (see config in game.js), and the
+/* Panel geometry. The game canvas is 518x632 (see config in js/game.js), and the
    dashboard and leaderboard are sized to match its *outer* box so every panel
    across the site is the same size. Sizing off the outer box rather than the
    bitmap means the canvas is never scaled, which would blur the pixel art. */

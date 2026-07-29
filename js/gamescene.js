@@ -4,6 +4,8 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
+        // Loader paths are relative to index.html at the repo root, not to this
+        // file in js/, so they need no '../' despite the script living a level down.
         this.load.spritesheet('player', './sprite_sheets/png_sheets/raver_player1.png', { frameWidth: 64, frameHeight: 64 })
 
         for(var i = 1; i <= 3; i++) {
