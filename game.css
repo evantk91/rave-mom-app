@@ -74,7 +74,7 @@ body, html {
 }
 
 #game-container {
-    display: none;
+    display: flex;
     background-image: url("assets/images/IMG_2859.JPG");
     flex-direction: row;
     justify-content: space-evenly;

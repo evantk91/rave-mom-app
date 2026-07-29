@@ -10,7 +10,7 @@ Live site: https://rave-mom.firebaseapp.com/
 
 ## Running the project
 
-There is no build step, bundler, or package manager (no `package.json`). This is plain static HTML/CSS/JS loaded via `<script>` tags in `index.html`, with Phaser 3 pulled from a CDN.
+There is no build step, bundler, or package manager (no `package.json`). This is plain static HTML/CSS/JS loaded via `<script>` tags across two pages — `login.html` (signup/login) and `index.html` (game/leaderboard) — with Phaser 3 pulled from a CDN.
 
 To run locally:
 1. Also clone and run the backend, `rave-mom-api` — `bundle install` then `rails s`.
@@ -25,17 +25,26 @@ Hosted on Firebase Hosting (`firebase.json`, `.firebaserc`, project `rave-mom`).
 ## Architecture
 
 ### Frontend/backend split
-All game logic and UI live here; all persistence (users, auth tokens, scores) lives in the Rails API. The frontend talks to the backend over hardcoded Heroku URLs (e.g. `https://rave-mom-app.herokuapp.com/api/v1/users`, `/login`, `/scores`) — there's no env-based config, so backend URL changes require editing `app.js` and `gamescene.js` directly.
+All game logic and UI live here; all persistence (users, auth tokens, scores) lives in the Rails API. The frontend talks to the backend over hardcoded URLs (e.g. `https://rave-mom-api.onrender.com/api/v1/users`, `/login`, `/scores`) — there's no env-based config, so backend URL changes require editing `login.js`, `dashboard.js`, and `gamescene.js` directly (`gamescene.js` re-declares `scoresURL` inline in each of its two bomb handlers).
 
-Auth state is kept client-side in `localStorage` (`token`, `user_id`, `username`, `password`), cleared on page load and on logout. Requests to protected endpoints send `Authorization: bearer <token>`.
+Auth state is kept client-side in `localStorage` (`token`, `user_id`, `username`, `password`). Which page you're on determines how that state is treated: `login.js` clears all of `localStorage` on every load, so a fresh visit to the login page always starts clean; `index.html`'s scripts only ever *read* it, and clear it only on logout before navigating back to `login.html`. Requests to protected endpoints send `Authorization: bearer <token>`.
+
+### Page split & session flow
+- `login.html` — signup and login forms only. A successful login stores the session in `localStorage` and then does a real navigation (`window.location.href`) to `index.html`. Signup deliberately does *not* auto-navigate; it shows an inline message and requires a separate manual login.
+- `index.html` — game and leaderboard only. `session-guard.js` redirects back to `login.html` if there's no valid session.
 
 ### Script load order (in `index.html`)
 Global scripts, no modules/bundler — load order matters and all state hangs off the global `gameState` object defined in `game.js`:
-1. `app.js` — auth (signup/login forms), leaderboard fetch/render, show/hide game vs. login nav card
+1. `session-guard.js` — the literal first tag in `<head>`, deliberately **not** deferred. Being a plain blocking script means it runs before the stylesheet, before the Phaser CDN request, and before any of `<body>` is parsed, so an invalid session redirects to `login.html` without ever loading or flashing the game.
 2. Phaser 3 (CDN)
 3. `startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
 4. `gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
 5. `game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
+6. `dashboard.js` — welcome message, logout, leaderboard fetch/render. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above, exactly where the old `app.js` used to run.
+
+Note that steps 2–5 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script. `gamescene.js` reaches across this shared global scope for `dashboard.js`'s top-level `leaderboard` and `scoresURL` bindings in its restart handler, so those two declarations must stay top-level and keep those exact names.
+
+`login.html` has no such subtlety — it loads only `login.js`, deferred.
 
 ### Game grid & bomb system (`gamescene.js`)
 This is the most complex part of the codebase and the most likely place for future changes:
