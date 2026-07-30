@@ -126,12 +126,29 @@ canvas {
         gap: 24px;
     }
 
-    /* Neither panel flexes. The dashboard keeps .panel's 638px height and the
-       canvas keeps its native size via the base rule's max-width and
-       aspect-ratio — the column overflows and scrolls rather than shrinking. */
+    /* Neither panel flexes: the canvas keeps its native size via the base
+       rule's max-width and aspect-ratio, so the column overflows and scrolls
+       rather than shrinking. */
     #dashboard,
     #canvas-container {
         flex: 0 0 auto;
+    }
+
+    /* Width stays at .panel's 524px to match the board, but the height is
+       released. Side by side it has to fill 638px to square up with the canvas
+       beside it; stacked there is nothing to match, and holding that height
+       leaves ~170px of empty panel above and below the content. */
+    #dashboard {
+        height: auto;
+        padding: 20px 0;
+    }
+
+    /* The h1's default 0.67em top margin stacks on top of that padding and
+       makes the gap above the welcome text nearly twice the one below the last
+       button. Zeroing it lets the padding alone set both, so they match. The
+       bottom margin stays — it's the spacing down to the instructions. */
+    #welcome-message {
+        margin-top: 0;
     }
 }
 
@@ -168,7 +185,7 @@ canvas {
     #dashboard {
         height: auto;
         max-width: min(306px, 100%);
-        padding-bottom: 8px;
+        padding: 10px 0;
     }
 
     /* Text steps down once, here, rather than scaling with the viewport. Fixed
