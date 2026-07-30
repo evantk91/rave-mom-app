@@ -1,26 +1,37 @@
 /* Styles for login.html only. Shared rules live in css/shared.css. */
 
+/* `min-height: 100dvh` so a short window scrolls to the forms rather than
+   clipping them, and `safe center` so centring never pushes the top of the card
+   out of reach. See the same pair in css/game.css for why. */
 #nav-card-container {
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
+    align-items: safe center;
+    min-height: 100dvh;
+    padding: 24px 12px;
     background-image: url("../assets/images/IMG_2859.JPG");
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    height: 100%;
 }
 
+/* Was `width: 50%; height: 60%; margin-top: 150px`, which on a 390px phone gave
+   a 195px-wide card holding forms at 80% of that — 156px, narrower than their
+   own headings. Now it sizes to its content and fills the available width up to
+   the old design width. The border radius is fixed rather than a percentage
+   because 10% distorts badly once the card's aspect ratio changes. */
 #nav-card {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-top: 150px;
-    height: 60%;
-    width: 50%;
+    width: 100%;
+    max-width: 520px;
+    padding: 24px 0;
     border-style: solid;
     border-color: greenyellow;
-    border-radius: 10%;
+    border-radius: 16px;
     list-style: none;
     box-shadow: 10px 5px 5px white;
 }
@@ -41,14 +52,32 @@ form {
 h2 {
     color: white;
     font-family: 'Press Start 2P', cursive;
+    text-align: center;
+    overflow-wrap: break-word;
 }
 
 .form-title {
     color: white;
     font-family: 'Press Start 2P', cursive;
+    overflow-wrap: break-word;
 }
 
 #sign-up-message {
     color: white;
     font-family: 'Press Start 2P', cursive;
+    overflow-wrap: break-word;
+}
+
+/* Type holds its original size until the mobile breakpoint, then steps down
+   once. "Welcome to Rave Mom" at 24px is ~456px of label, which no longer fits
+   the card once the viewport is narrower than the card's design width. */
+@media (max-width: 560px) {
+    h2 {
+        font-size: 13px;
+    }
+
+    .form-title,
+    #sign-up-message {
+        font-size: 11px;
+    }
 }

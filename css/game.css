@@ -1,11 +1,27 @@
 /* Styles for the game page (index.html) only. Shared rules live in css/shared.css. */
 
+/* `min-height` rather than `height` so the section grows past the viewport and
+   the page scrolls, instead of being capped at it and clipping. `dvh` rather
+   than `vh` because iOS Safari's collapsing address bar makes `vh` report the
+   *expanded* height — a box sized against it sits partly under browser chrome.
+
+   `safe center` keeps the panels vertically centred while there's room and
+   falls back to start-alignment once the content is taller than the viewport.
+   Plain `center` would push the overflow off the *top* of the page, where no
+   amount of scrolling can reach it; the unprefixed `center` above it is the
+   fallback for browsers that don't parse the `safe` keyword.
+
+   Note it's `align-items` that clips here, not `justify-content`: this is a
+   flex *row*, so the vertical axis is the cross axis. `justify-content` only
+   distributes horizontally — until the media query below turns the axes. */
 #game-container {
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
     align-items: center;
-    height: 100%;
+    align-items: safe center;
+    min-height: 100dvh;
+    padding: 20px var(--panel-border);
     background-image: url("../assets/images/IMG_2859.JPG");
     background-position: center;
     background-repeat: repeat;
@@ -20,6 +36,49 @@
     padding-bottom: 20px;
 }
 
+/* Phaser measures this element's *border box* to decide how large to draw the
+   canvas, so it has no border or padding of its own — the border lives on the
+   canvas instead, and this box is exactly the bitmap's width. `aspect-ratio`
+   derives the height from that width rather than from the viewport, which is
+   what keeps the canvas at native size on a short but wide window.
+
+   The definite width is load-bearing: without it the measurement is circular —
+   the container would size to the canvas while the canvas sizes to the
+   container. The 6px subtracted from `width` is the room the canvas's own
+   border needs, so its outer edge lines up with the dashboard's. */
+/* No `margin: 0 auto` here. An auto margin on a flex item absorbs the free
+   space before `justify-content` gets a chance to distribute it, which cancels
+   `space-evenly` and pins the dashboard flush against the left edge. Horizontal
+   centring in the stacked layout comes from `align-items` instead. */
+#canvas-container {
+    width: calc(100% - var(--panel-border) * 2);
+    max-width: var(--panel-width);
+    aspect-ratio: 518 / 632;
+    /* Fixed (not auto) margins standing in for the canvas's border, which is
+       drawn outside this box. They make the item's outer width 524px — the same
+       as .panel — so `space-evenly` divides the row into visually equal gaps and
+       the two panels' edges line up when stacked. */
+    margin: 0 var(--panel-border);
+    /* Undoes the `*` reset in shared.css. This box used to collapse onto the
+       canvas, so its black background was never visible; now that it has a
+       definite size, the letterboxed area either side of a scaled-down canvas
+       would be painted black over the page's background image. */
+    background-color: transparent;
+}
+
+/* `content-box` is load-bearing. Phaser writes an inline width/height onto the
+   canvas; under the global `border-box` reset the 3px border would be taken
+   *out of* that size, squeezing 518x632 into 512x626 and breaking the aspect
+   ratio. With `content-box` the border sits outside the drawn area — which is
+   why #canvas-container is 6px narrower than .panel and #game-container
+   carries 3px of horizontal padding to leave room for it. */
+canvas {
+    display: block;
+    box-sizing: content-box;
+    border: var(--panel-border) solid var(--panel-border-color);
+    image-rendering: pixelated;
+}
+
 #welcome-message {
     display: flex;
     flex-direction: row;
@@ -27,6 +86,8 @@
     color: white;
     font-family: 'Press Start 2P', cursive;
     align-items: center;
+    text-align: center;
+    overflow-wrap: break-word;
 }
 
 .rule-container {
@@ -41,12 +102,109 @@
     padding-left: 20px;
     padding-right: 20px;
     font-size: 12pt;
+    overflow-wrap: break-word;
 }
 
-canvas {
-    display: block;
-    margin: 0 auto;
-    border: var(--panel-border) solid var(--panel-border-color);
+/* Below the width at which two 524px panels stop fitting side by side, the
+   layout becomes a single column — dashboard on top, canvas below, matching
+   the source order in index.html so no `order` juggling is needed.
+
+   Both panels keep their original dimensions here: 524x638 for the dashboard
+   and a native 518x632 canvas, separated by a gap. The column simply grows
+   past the viewport and the page scrolls. Only the phone tier below, where the
+   canvas physically cannot be native, shrinks anything. */
+@media (max-width: 1120px) {
+    #game-container {
+        flex-direction: column;
+        /* The axes swap here: `space-evenly` from the base rule would now
+           distribute *vertically* and push the two panels apart. `safe center`
+           keeps the column centred while it fits and start-aligns it once it
+           doesn't, so the top never lands above the scrollable area.
+           `align-items` becomes the horizontal centring — leave it alone. */
+        justify-content: center;
+        justify-content: safe center;
+        gap: 24px;
+    }
+
+    /* Neither panel flexes: the canvas keeps its native size via the base
+       rule's max-width and aspect-ratio, so the column overflows and scrolls
+       rather than shrinking. */
+    #dashboard,
+    #canvas-container {
+        flex: 0 0 auto;
+    }
+
+    /* Width stays at .panel's 524px to match the board, but the height is
+       released. Side by side it has to fill 638px to square up with the canvas
+       beside it; stacked there is nothing to match, and holding that height
+       leaves ~170px of empty panel above and below the content. */
+    #dashboard {
+        height: auto;
+        padding: 20px 0;
+    }
+
+    /* The h1's default 0.67em top margin stacks on top of that padding and
+       makes the gap above the welcome text nearly twice the one below the last
+       button. Zeroing it lets the padding alone set both, so they match. The
+       bottom margin stays — it's the spacing down to the instructions. */
+    #welcome-message {
+        margin-top: 0;
+    }
+}
+
+/* Phone tier. Native size is impossible here — 518px plus its border is wider
+   than the viewport — so the board takes a fixed 300x366 (a 0.579 scale of the
+   bitmap) rather than filling the width.
+
+   Fixed rather than fluid because the two goals fight each other when it's
+   fluid: a wider board is a taller board, and a *narrower* column also makes
+   the dashboard taller as the instruction text rewraps, so the column's height
+   grows at both ends and short screens end up scrolling. Pinning the board
+   makes the whole column a known height that fits every common phone. The cost
+   is margins either side on a large phone, which is the trade that was chosen.
+
+   The `min()` guards are for viewports narrower than the fixed size itself.
+   The dashboard's 306px is 300 plus the canvas border, which is drawn outside
+   #canvas-container — that's what makes the two panels exactly the same width. */
+@media (max-width: 560px) {
+    /* Tighter than the 20px default: with the board pinned, the column lands
+       14px over a 640px-tall screen, and trimming the vertical padding is what
+       brings the shortest common phones in under the fold. */
+    #game-container {
+        gap: 10px;
+        padding: 12px var(--panel-border);
+    }
+
+    /* Releases .panel's fixed 638px, which would otherwise leave ~400px of
+       empty panel above the board. */
+    /* The bottom padding is dead space once the height is content-driven, and
+       the default 1em margins between the three instruction lines are generous
+       at this size. Trimming both is what keeps the shortest common phones
+       (640px tall) under the fold now that the type no longer shrinks with the
+       viewport. */
+    #dashboard {
+        height: auto;
+        max-width: min(306px, 100%);
+        padding: 10px 0;
+    }
+
+    /* Text steps down once, here, rather than scaling with the viewport. Fixed
+       values work because the panel above is pinned at 306px on every phone, so
+       the space this text has to fit never changes — which also keeps the
+       column a constant height. Above this breakpoint the type stays at its
+       original size. */
+    #welcome-message {
+        font-size: 12.5px;
+    }
+
+    .rules {
+        font-size: 9.5px;
+        margin: 5px 0;
+    }
+
+    #canvas-container {
+        width: min(300px, calc(100% - var(--panel-border) * 2));
+    }
 }
 
 /* Both buttons stay hidden through the start menu and active play, and are
