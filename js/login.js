@@ -49,8 +49,10 @@ userLogin.addEventListener("submit", event => {
         password: formData.get("password")
     }
 
+    // Only the username is persisted. The password goes in the request body
+    // below and is never stored: nothing reads it back, and a stored password
+    // is a far worse thing to leak than a revocable token.
     localStorage.setItem("username", user.username)
-    localStorage.setItem("password", user.password)
 
     fetch(loginURL, {
         method: "POST",

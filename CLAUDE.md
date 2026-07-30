@@ -67,7 +67,11 @@ A correct deploy reports **70 files**. If that number jumps, something that shou
 ### Frontend/backend split
 All game logic and UI live here; all persistence (users, auth tokens, scores) lives in the Rails API. The frontend talks to the backend over hardcoded URLs (e.g. `https://rave-mom-api.onrender.com/api/v1/users`, `/login`, `/scores`) — there's no env-based config, so backend URL changes require editing `js/login.js`, `js/leaderboard.js`, and `js/gamescene.js` directly (`js/gamescene.js` re-declares `scoresURL` inline in each of its two bomb handlers).
 
-Auth state is kept client-side in `localStorage` (`token`, `user_id`, `username`, `password`). Which page you're on determines how that state is treated: `js/login.js` clears all of `localStorage` on every load, so a fresh visit to the login page always starts clean; the scripts on `index.html` and `leaderboard.html` only ever *read* it, and clear it only on logout before navigating back to `login.html`. Requests to protected endpoints send `Authorization: bearer <token>`.
+Auth state is kept client-side in `localStorage` (`token`, `user_id`, `username`). Which page you're on determines how that state is treated: `js/login.js` clears all of `localStorage` on every load, so a fresh visit to the login page always starts clean; the scripts on `index.html` and `leaderboard.html` only ever *read* it, and clear it only on logout before navigating back to `login.html`. Requests to protected endpoints send `Authorization: bearer <token>`.
+
+**The password is never persisted.** It goes into the login request body and nowhere else — no `localStorage`, `sessionStorage`, or cookie. An earlier version stored it under a `password` key that nothing ever read; it was removed because a leaked password is unrevocable and widely reused, where a leaked token is neither. Don't reintroduce the write, and don't "secure" it by encrypting it client-side — any key the page can use, an attacker on that page can also recover.
+
+`js/clear-stored-password.js` exists only to clean up users who logged in before that change and would otherwise keep the stale key indefinitely (it's cleared on logout or on a login-page visit, but a user who stays logged in makes neither trip). It's deferred on `index.html` and `leaderboard.html`, removes exactly that one key, and swallows storage exceptions so private-browsing or disabled-site-data can't break the session. **It is temporary** — once the existing user population has cycled through, delete the file and both script tags.
 
 ### Page split & session flow
 - `login.html` — signup and login forms only. A successful login stores the session in `localStorage` and then does a real navigation (`window.location.href`) to `index.html`. Signup deliberately does *not* auto-navigate; it shows an inline message and requires a separate manual login.
@@ -85,6 +89,8 @@ The `.panel` custom properties in `css/shared.css` are derived from the canvas's
 All scripts live in `js/`. Global scripts, no modules/bundler — load order matters and all state hangs off the global `gameState` object defined in `js/game.js`:
 1. `js/session-guard.js` — the literal first tag in `<head>`, deliberately **not** deferred. Being a plain blocking script means it runs before the stylesheet, before the Phaser CDN request, and before any of `<body>` is parsed, so an invalid session redirects to `login.html` without ever loading or flashing the game.
 2. Phaser 3 (CDN)
+
+`js/clear-stored-password.js` sits right after the guard but is `defer`red, unlike it: nothing reads the key it deletes, so it has no ordering dependency and there's no reason to put a second blocking request on the critical path. If the guard redirects, the deferred script never runs — which is fine, because `js/login.js` clears all of storage on arrival anyway.
 3. `js/startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
 4. `js/gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
 5. `js/game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
