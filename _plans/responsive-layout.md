@@ -31,9 +31,37 @@ Per `_specs/responsive-layout.md`, the game page gets two layouts chosen on **wi
 
 ## The three real hazards
 
-**A. Flex centering clips overflow.** All three containers center with `justify-content` / `align-items: center`. When content is taller than a centered flex container, the overflow goes off the **top** and is unreachable — scrolling cannot get to it. This is exactly the short-window case in the side-by-side layout, and it will silently defeat the scroll requirement. Fix: `justify-content: flex-start` plus vertical padding wherever content can overflow, rather than relying on `center`.
+**A. Flex centering clips overflow.** When content is taller than a centered flex container, the overflow goes off the **top** and is unreachable — scrolling cannot get to it. This is exactly the short-window case in the side-by-side layout, and it will silently defeat the scroll requirement.
 
-**B. `border-box` + Phaser's inline canvas size distorts the art.** `FIT` writes `style.width`/`style.height` onto the canvas in px. With the global `box-sizing: border-box` and `canvas { border: 3px }` (`css/game.css:46-50`), that 6px is subtracted *from* the display box — the art renders into 512x626 and the aspect ratio breaks. Fix: move the border off the canvas onto `#canvas-container` so Phaser's inline sizing is unambiguous. Visually identical.
+Note *which* property to fix. `#game-container` (`css/game.css:3-13`) and `#leaderboard-page` (`css/leaderboard.css:3-13`) are `flex-direction: row`, so the vertical axis is the **cross** axis and the clipping comes from **`align-items: center`** — not `justify-content`, which only controls the horizontal distribution there. Once `#game-container` flips to `column` in the stacked layout the axes swap and `justify-content` becomes the vertical one, so both properties need checking, in different layouts.
+
+Fix, applied to `#game-container` and `#leaderboard-page`:
+
+```css
+align-items: center;        /* fallback: today's behavior */
+align-items: safe center;   /* start-aligns instead once content overflows */
+min-height: 100%;           /* was height: 100% — lets the box grow past the viewport */
+padding: 20px 0;
+```
+
+`safe center` is the precise tool for this: it centers while there is free space and silently falls back to start-alignment when there isn't, which is exactly the "center normally, don't hide the top when short" behavior wanted. Declaring plain `center` first means browsers that don't parse the `safe` keyword drop the second declaration and keep today's rendering — no worse than the status quo.
+
+If `safe center` turns out to be unreliable, the bulletproof alternative is `align-items: flex-start` on the container plus `margin-top: auto; margin-bottom: auto` on the panels: auto margins center exactly like `center` but resolve to `0` when free space is negative, so they never push content out of reach.
+
+`height: 100%` → `min-height: 100%` is required for the fix to matter — at a fixed `height: 100%` the container cannot grow to cover the overflowing content, so its background stops where the viewport does.
+
+`#nav-card-container` (`css/login.css:3-12`) is **not** affected: it sets no `align-items`, so it defaults to `stretch` and never center-clips. Its short-window clipping comes from `#nav-card`'s `margin-top: 150px` / `height: 60%`, handled in the login section below.
+
+**B. `border-box` + Phaser's inline canvas size distorts the art.** `FIT` writes `style.width`/`style.height` onto the canvas in px. With the global `box-sizing: border-box` and `canvas { border: 3px }` (`css/game.css:46-50`), that 6px is subtracted *from* the display box — the art renders into 512x626 and the aspect ratio breaks.
+
+Fix: move the border off the canvas onto `#canvas-container`.
+
+```css
+#canvas-container { border: var(--panel-border) solid var(--panel-border-color); }
+canvas { display: block; margin: 0 auto; }   /* border removed */
+```
+
+Visually identical, and it stands alone — with `#canvas-container` sizing to its content, the border sits at 524x638 exactly where it does today, so this can land before the Phaser config without any interim change on screen.
 
 **C. `FIT` fits height too — wanted stacked, wrong side by side.** `FIT` scales to `min(parentW/518, parentH/632)`. That is precisely Decision 7's behavior in the stacked layout, and precisely wrong in side-by-side, where a short window must leave the canvas at native size and scroll. **The same Phaser config produces both**, so the difference has to come from the parent box: `#canvas-container` is height-constrained only in the stacked layout. Get this backwards and the desktop canvas shrinks on short windows (violating Decision 4) or the phone canvas overflows (violating Decision 7).
 
@@ -63,12 +91,13 @@ Phaser is pinned to **3.16.2** (`index.html:15`), the release that *introduced* 
 ### `css/game.css` — the layout work
 
 **Default (side-by-side), unchanged behavior:**
-- `#game-container`: `height: 100%` → `min-height: 100dvh`, so tall content overflows into a scrollbar instead of clipping. Keep the background rules. Replace the centering per hazard A with `flex-start` + vertical padding.
+- `#game-container`: `height: 100%` → `min-height: 100dvh`, so tall content overflows into a scrollbar instead of clipping. Keep the background rules. Apply the hazard-A fix — `align-items: center` followed by `align-items: safe center`, plus `padding: 20px 0`. Leave `justify-content: space-evenly` alone; in this row layout it is the horizontal axis and is not what clips.
 - `#canvas-container` (currently has no rules at all): `width: 100%`, `max-width: var(--panel-outer-width)`, `aspect-ratio: 518 / 632`, `margin: 0 auto`, and the border moved off the canvas per hazard B. The `aspect-ratio` derives a definite height from the width — **not** from the viewport — which is what keeps the canvas native on a short wide window. Without a definite width the parent sizes to the canvas while the canvas sizes to the parent, and the measurement is circular.
 - `canvas`: drop the `border` (now on the parent); add `image-rendering: pixelated`.
 
 **Stacked layout — one `@media (max-width: …)` block**, threshold ≈ **1120px** (two 524px panels plus the gap `space-evenly` produces); confirm against the real layout:
 - `#game-container`: `flex-direction: column`, and `height: 100dvh` — a hard height, not `min-height`, so there is a fixed budget for the children to divide. This is the one place a viewport-height constraint is correct.
+- **The axes swap here.** `justify-content: space-evenly` from the base rule now distributes *vertically* and would spread the dashboard and canvas apart, fighting the flex sizing below; override it to `flex-start`. `align-items: safe center` becomes the horizontal axis, which is what centers the panels in the column — keep it.
 - `#dashboard`: `flex: 0 0 auto` — takes exactly the height its content needs. Release the fixed `.panel` size (Decision 5): `width: 100%`, `max-width: var(--panel-outer-width)`, `height: auto`.
 - `#canvas-container`: `flex: 1 1 auto`, `min-height: 0`, and **drop the `aspect-ratio`** — it now gets the leftover box and `FIT` letterboxes the 518:632 canvas inside it. `min-height: 0` is required or the flex item refuses to shrink below its content size.
 - Decision 8's floor: `min-height` of roughly **320px** (≈0.5× scale, 37px grid cells) on `#canvas-container`. Once the floor binds, the column exceeds `100dvh` and the page scrolls — which is the intended fallback. Tune the value by eye; 0.5× is a starting guess, not a measured one.
@@ -86,11 +115,11 @@ Phaser is pinned to **3.16.2** (`index.html:15`), the release that *introduced* 
 
 ### `css/login.css`
 
-`#nav-card-container` gets `min-height: 100dvh` + the hazard-A overflow treatment. `#nav-card`'s `margin-top: 150px`, `height: 60%`, `width: 50%` become responsive (auto margins, `height: auto`, a percentage width with a `max-width`). Today on a 390px phone that card is **195px wide** with `form { width: 80% }` inside it — 156px, narrower than the `Press Start 2P` heading — so the forms are currently unusable there. Decision 6 permits adjusting `border-radius: 10%` / `box-shadow`; the percentage radius distorts once the card's aspect ratio changes.
+`#nav-card-container` gets `min-height: 100dvh` so it can grow past the viewport. It needs no `align-items` change — per hazard A it never center-clips, since it sets no `align-items` at all. `#nav-card`'s `margin-top: 150px`, `height: 60%`, `width: 50%` become responsive (auto margins, `height: auto`, a percentage width with a `max-width`). Today on a 390px phone that card is **195px wide** with `form { width: 80% }` inside it — 156px, narrower than the `Press Start 2P` heading — so the forms are currently unusable there. Decision 6 permits adjusting `border-radius: 10%` / `box-shadow`; the percentage radius distorts once the card's aspect ratio changes.
 
 ### `css/leaderboard.css`
 
-`#leaderboard-page` gets the same `min-height` + overflow treatment. `#leaderboard-container` releases its fixed panel size in the stacked media query. `#leaderboard li` gets `overflow-wrap: break-word` and a `clamp()`ed font size — `Press Start 2P` is wide and a long username will overflow at 390px. Preserve the "only the list scrolls" behavior where there's room; below that the page scrolls so "Return to Game" stays reachable.
+`#leaderboard-page` gets the full hazard-A fix — it is a `flex-direction: row` with `align-items: center`, so it clips exactly like `#game-container`: `min-height: 100dvh`, `align-items: center` then `align-items: safe center`, and vertical padding. `#leaderboard-container` releases its fixed panel size in the stacked media query. `#leaderboard li` gets `overflow-wrap: break-word` and a `clamp()`ed font size — `Press Start 2P` is wide and a long username will overflow at 390px. Preserve the "only the list scrolls" behavior where there's room; below that the page scrolls so "Return to Game" stays reachable.
 
 ### No HTML changes
 
