@@ -46,7 +46,21 @@ bases** and moving a file means checking which kind you're touching:
 
 ## Deployment
 
-Hosted on Firebase Hosting (`firebase.json`, `.firebaserc`, project `rave-mom`). The public root is `.` (the whole repo, minus dotfiles), so deploys are `firebase deploy` from the repo root.
+Hosted on Firebase Hosting (`firebase.json`, `.firebaserc`, project `rave-mom`). Deploys are `firebase deploy` from the repo root.
+
+The public root is `.` — the whole repo — so **hosting is opt-out, not opt-in**: every new file ships unless `firebase.json`'s `ignore` list excludes it. That list is the only thing standing between a working file and a public URL, and JSON can't hold comments, so it's documented here instead:
+
+| Pattern | Excludes |
+| --- | --- |
+| `**/.*` | dotfiles *themselves* (`.gitignore`, `.firebaserc`) |
+| `**/.*/**` | the *contents* of dot-directories (`.git/`, `.claude/`) |
+| `_specs/**`, `_plans/**` | specs and plans |
+| `CLAUDE.md`, `README.md` | repo docs — this file included |
+| `**/*.aseprite` | Aseprite sources; only the exported PNGs ship |
+
+The first two rows are the subtle part and both are needed. `**/.*` matches a path whose *final* segment starts with a dot, so it excludes `.git` but **not** `.git/config` — on its own it left the entire `.git` directory publicly fetchable, which is how the git history and an unpushed local branch ended up on the live site. `**/.*/**` is what covers files nested inside a dot-directory. Don't drop either one.
+
+A correct deploy reports **70 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above.
 
 ## Architecture
 
