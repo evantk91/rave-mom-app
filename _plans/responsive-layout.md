@@ -1,75 +1,44 @@
 # Plan: Responsive layout for desktop resize and mobile
 
-Implements `_specs/responsive-layout.md`.
+Implements `_specs/responsive-layout.md`. **Built and verified in a browser** — this document reflects what was actually implemented, including several things the original plan got wrong.
 
 ## Context
 
-Every page is built for one window size. `body, html` and all three page containers use `height: 100%`, and `.panel` (`css/shared.css:26-30`) pins the dashboard, canvas, and leaderboard to a fixed `524x638` outer box derived from the 518x632 Phaser canvas in `js/game.js:7-8`. Narrow the window and `#game-container`'s flex **row** (`css/game.css:3-13`) pushes a panel off-screen; open it on a phone and the layout is simply wider than the viewport.
+Every page was built for one window size. `body, html` and all three page containers used `height: 100%`, and `.panel` pinned the dashboard, canvas, and leaderboard to a fixed `524x638` outer box derived from the 518x632 Phaser canvas in `js/game.js`. Narrowing the window pushed a panel off-screen; a phone got a layout wider than the viewport.
 
-Per `_specs/responsive-layout.md`, the game page gets two layouts chosen on **width alone** — side-by-side above the breakpoint, dashboard-above-canvas below it. The two layouts treat height differently, and that difference is the heart of this plan: side-by-side ignores height and **scrolls**, while stacked **fits the canvas to the leftover height** so a phone shows everything at once.
+The result is three tiers on the game page. The middle tier — stacked but at original dimensions — is the part that isn't obvious: it exists because preserving the desktop look on a narrow-ish window matters more than avoiding a scrollbar, while a phone needs the opposite trade.
 
-### Decisions locked in (from the spec)
+| Width | Layout | Dashboard | Board | Scrolls |
+|---|---|---|---|---|
+| ≥ 1121px | row | 524x638 | native 518x632 | no |
+| 561–1120px | column | 524x638 | native 518x632 | yes |
+| ≤ 560px | column | content height, 306px | fixed 300x366 | no |
 
-1. Canvas scaling via Phaser's Scale Manager (`FIT` + `autoCenter`), **capped at native size** so it only ever scales down.
-2. Phone support is **display-only**. Movement stays keyboard-only. **Do not add touch controls.**
-3. Breakpoint is the natural threshold — where two 524px panels stop fitting side by side.
-4. Layout breakpoint keys on width only; nothing is ever hidden. Side-by-side ignores height and scrolls.
-5. `.panel` stays fixed side by side, becomes fluid once stacked.
-6. Login page visual identity may change where it fights a small viewport.
-7. **Stacked layout fits the screen** — dashboard takes what it needs, canvas takes the rest and scales down. No scrolling on a phone.
-8. **The canvas has a floor.** Below a playable size it stops shrinking and the page scrolls instead.
+## Critical existing behaviour preserved
 
-## Critical existing behavior to preserve
+1. **All gameplay math stays in the 518x632 space** — the 74px grid, `gameState.playerGridPositions`, the 40 explosion arrays, `gameState.raveGirlLocations`, and the movement bounds in `js/gamescene.js`. The Scale Manager scales presentation only. **Verified**: with the board at 0.58x, the player still spawns at `(37, 37)` and steps to `(123, 37)`.
+2. **Neither `pointerup` handler reads coordinates** (`js/startmenu.js`, `js/gamescene.js`) — bare "click anywhere" handlers, which de-risks scaling considerably. **Verified**: a real click on a scaled canvas starts the game.
+3. **The `game-over` body-class handoff** (`js/gamescene.js`, `css/game.css`) still works, and stays `visibility` not `display` so the dashboard doesn't shift. **Verified** for the CSS half; the animation handoff itself was never exercised.
+4. **`js/session-guard.js` stays the first, non-deferred tag** in `<head>`.
+5. Markup order already has `#dashboard` before `#canvas-container`, so the stacked order falls out of source order — no `order` property needed.
 
-1. **Neither `pointerup` handler reads pointer coordinates.** `js/startmenu.js:23` and `js/gamescene.js:411` are bare "click anywhere" handlers. This substantially de-risks scaling — even if Phaser's input transform were off, click-to-start and click-to-play-again still work. Verify anyway, but it is not the hazard it would be in a game with positional input.
-2. **All gameplay math is in the 518x632 space** — the 74px grid, `gameState.playerGridPositions`, the 40 hardcoded explosion arrays, `gameState.raveGirlLocations`, and the movement bounds at `js/gamescene.js:608-617`. The Scale Manager scales the *presentation* only; none of these constants change. **Do not touch them.**
-3. **The `game-over` body-class handoff** (`js/gamescene.js:596-602`, `css/game.css:56-64`) must keep working in both layouts, and must stay `visibility` not `display` so the dashboard doesn't shift.
-4. **`* { background-color: black }`** (`css/shared.css:16-19`) paints every element opaque black. Any new wrapper would cover the background image — so add no new elements; restyle existing ones.
-5. **The `@import` at `css/shared.css:1` must stay the first rule** or the font silently stops loading.
-6. **`js/session-guard.js` stays the first, non-deferred tag** in `<head>` on `index.html` and `leaderboard.html`.
-7. Markup order already has `#dashboard` before `#canvas-container` (`index.html:20-39`), so the stacked order falls out of source order — **no `order` property needed**.
+## The five things that actually bit
 
-## The three real hazards
+The original plan predicted two of these. The other three only showed up in the browser.
 
-**A. Flex centering clips overflow.** When content is taller than a centered flex container, the overflow goes off the **top** and is unreachable — scrolling cannot get to it. This is exactly the short-window case in the side-by-side layout, and it will silently defeat the scroll requirement.
+**A. Centred flex containers hide overflow where scrolling can't reach it.** Content taller than a centred flex container overflows off the *top*. On `#game-container` and `#leaderboard-page` — flex **rows** — the vertical axis is the cross axis, so the culprit is `align-items`, not `justify-content`. Fixed with a `safe center` declaration behind a plain `center` fallback. The axes swap when the game page becomes a column, so `justify-content` gets the same treatment there.
 
-Note *which* property to fix. `#game-container` (`css/game.css:3-13`) and `#leaderboard-page` (`css/leaderboard.css:3-13`) are `flex-direction: row`, so the vertical axis is the **cross** axis and the clipping comes from **`align-items: center`** — not `justify-content`, which only controls the horizontal distribution there. Once `#game-container` flips to `column` in the stacked layout the axes swap and `justify-content` becomes the vertical one, so both properties need checking, in different layouts.
+**B. Phaser's inline canvas size vs. `box-sizing`.** `FIT` writes an inline width/height onto the canvas; under the global `border-box` reset the 3px border is subtracted *from* it, squashing 518x632 into 512x626. Fixed with `box-sizing: content-box` on the canvas so the border sits outside the drawn area.
 
-Fix, applied to `#game-container` and `#leaderboard-page`:
+**C. `#canvas-container` painted itself black.** `* { background-color: black }` in `css/shared.css` applies to everything. This box previously collapsed onto the canvas so its background was never visible; giving it a definite size turned it into black bars around a letterboxed canvas. Fixed with `background-color: transparent`. *(The plan flagged this hazard for new wrappers and it bit an existing one.)*
 
-```css
-align-items: center;        /* fallback: today's behavior */
-align-items: safe center;   /* start-aligns instead once content overflows */
-min-height: 100%;           /* was height: 100% — lets the box grow past the viewport */
-padding: 20px 0;
-```
+**D. `body`'s default 8px margin.** With containers sized in `100dvh`, an 8px margin puts a permanent scrollbar on a page that otherwise fits exactly. Fixed with `margin: 0`.
 
-`safe center` is the precise tool for this: it centers while there is free space and silently falls back to start-alignment when there isn't, which is exactly the "center normally, don't hide the top when short" behavior wanted. Declaring plain `center` first means browsers that don't parse the `safe` keyword drop the second declaration and keep today's rendering — no worse than the status quo.
-
-If `safe center` turns out to be unreliable, the bulletproof alternative is `align-items: flex-start` on the container plus `margin-top: auto; margin-bottom: auto` on the panels: auto margins center exactly like `center` but resolve to `0` when free space is negative, so they never push content out of reach.
-
-`height: 100%` → `min-height: 100%` is required for the fix to matter — at a fixed `height: 100%` the container cannot grow to cover the overflowing content, so its background stops where the viewport does.
-
-`#nav-card-container` (`css/login.css:3-12`) is **not** affected: it sets no `align-items`, so it defaults to `stretch` and never center-clips. Its short-window clipping comes from `#nav-card`'s `margin-top: 150px` / `height: 60%`, handled in the login section below.
-
-**B. `border-box` + Phaser's inline canvas size distorts the art.** `FIT` writes `style.width`/`style.height` onto the canvas in px. With the global `box-sizing: border-box` and `canvas { border: 3px }` (`css/game.css:46-50`), that 6px is subtracted *from* the display box — the art renders into 512x626 and the aspect ratio breaks.
-
-Fix: move the border off the canvas onto `#canvas-container`.
-
-```css
-#canvas-container { border: var(--panel-border) solid var(--panel-border-color); }
-canvas { display: block; margin: 0 auto; }   /* border removed */
-```
-
-Visually identical, and it stands alone — with `#canvas-container` sizing to its content, the border sits at 524x638 exactly where it does today, so this can land before the Phaser config without any interim change on screen.
-
-**C. `FIT` fits height too — wanted stacked, wrong side by side.** `FIT` scales to `min(parentW/518, parentH/632)`. That is precisely Decision 7's behavior in the stacked layout, and precisely wrong in side-by-side, where a short window must leave the canvas at native size and scroll. **The same Phaser config produces both**, so the difference has to come from the parent box: `#canvas-container` is height-constrained only in the stacked layout. Get this backwards and the desktop canvas shrinks on short windows (violating Decision 4) or the phone canvas overflows (violating Decision 7).
+**E. `margin: 0 auto` cancelled `space-evenly`.** An auto margin on a flex item absorbs the free space *before* `justify-content` distributes it. The dashboard was pinned flush left and the pair sat 85px off-centre (gaps of 3 / 171 / 174 at 1400px). Fixed by removing it — horizontal centring when stacked comes from `align-items` — and replacing it with a **fixed** 3px margin standing in for the canvas border, so the item's outer width is 524px like `.panel` and the gaps divide evenly.
 
 ## File changes
 
-### `js/game.js` — add the scale config
-
-Add a `scale` block to `config`, replacing the bare `width`/`height`:
+### `js/game.js`
 
 ```js
 scale: {
@@ -78,73 +47,61 @@ scale: {
     parent: 'canvas-container',
     width: 518,
     height: 632,
-    max: { width: 518, height: 632 }   // never upscale — Decision 1
+    max: { width: 518, height: 632 }
 }
 ```
 
-`max` keeps a large desktop window from blowing the canvas up and blurring the pixel art. `CENTER_BOTH` rather than horizontal-only, since the stacked layout can now leave vertical slack. Keep `parent` here and drop the top-level `parent`/`width`/`height` so there is one source of truth.
+Replaces the top-level `width`/`height`/`parent` so there's one source of truth. The `max` cap is belt-and-braces: `#canvas-container`'s `max-width` already holds the parent at the bitmap's width, so `FIT` can't exceed 1x regardless. Phaser is pinned to **3.16.2**, the release that introduced the Scale Manager, so the CSS backstop matters.
 
-One config serves both layouts — all the layout-specific behavior comes from the size of `#canvas-container` (hazard C).
+### `css/shared.css`
 
-Phaser is pinned to **3.16.2** (`index.html:15`), the release that *introduced* the Scale Manager. If `max` misbehaves, the fallback is to cap size in CSS via `#canvas-container`'s `max-width` and leave Phaser on `Phaser.Scale.NONE` — but note that fallback gives up Decision 7, since only `FIT` does the fit-to-height work.
+- `html { height: 100% }` + `body { min-height: 100%; margin: 0 }` — a definite height for containers to size against, but a body that grows with its content.
+- `.panel` → `width: 100%; max-width: var(--panel-outer-width)`. Identical to the old fixed 524px on any window wide enough, fluid below.
+- `.button` → fixed `20px`, with a `@media (max-width: 560px)` step to `11px`. `min-width: min(200px, 100%)` keeps it a usable tap target.
+- `.form-field` → `font-size: max(16px, 1rem)`. The 16px floor is what stops iOS zooming on focus.
 
-### `css/game.css` — the layout work
+### `css/game.css`
 
-**Default (side-by-side), unchanged behavior:**
-- `#game-container`: `height: 100%` → `min-height: 100dvh`, so tall content overflows into a scrollbar instead of clipping. Keep the background rules. Apply the hazard-A fix — `align-items: center` followed by `align-items: safe center`, plus `padding: 20px 0`. Leave `justify-content: space-evenly` alone; in this row layout it is the horizontal axis and is not what clips.
-- `#canvas-container` (currently has no rules at all): `width: 100%`, `max-width: var(--panel-outer-width)`, `aspect-ratio: 518 / 632`, `margin: 0 auto`, and the border moved off the canvas per hazard B. The `aspect-ratio` derives a definite height from the width — **not** from the viewport — which is what keeps the canvas native on a short wide window. Without a definite width the parent sizes to the canvas while the canvas sizes to the parent, and the measurement is circular.
-- `canvas`: drop the `border` (now on the parent); add `image-rendering: pixelated`.
+**Base (side by side):**
+- `#game-container`: `min-height: 100dvh`, `padding: 20px var(--panel-border)`, hazard-A fix on `align-items`. `justify-content: space-evenly` unchanged.
+- `#canvas-container`: `width: calc(100% - var(--panel-border) * 2)`, `max-width: var(--panel-width)`, `aspect-ratio: 518 / 632`, `margin: 0 var(--panel-border)`, `background-color: transparent`. **No border and no padding** — Phaser measures this element's border box, so anything it carries inflates the canvas.
+- `canvas`: `box-sizing: content-box`, the border moved here, `image-rendering: pixelated`.
+- Type: fixed at original sizes, no `clamp()`.
 
-**Stacked layout — one `@media (max-width: …)` block**, threshold ≈ **1120px** (two 524px panels plus the gap `space-evenly` produces); confirm against the real layout:
-- `#game-container`: `flex-direction: column`, and `height: 100dvh` — a hard height, not `min-height`, so there is a fixed budget for the children to divide. This is the one place a viewport-height constraint is correct.
-- **The axes swap here.** `justify-content: space-evenly` from the base rule now distributes *vertically* and would spread the dashboard and canvas apart, fighting the flex sizing below; override it to `flex-start`. `align-items: safe center` becomes the horizontal axis, which is what centers the panels in the column — keep it.
-- `#dashboard`: `flex: 0 0 auto` — takes exactly the height its content needs. Release the fixed `.panel` size (Decision 5): `width: 100%`, `max-width: var(--panel-outer-width)`, `height: auto`.
-- `#canvas-container`: `flex: 1 1 auto`, `min-height: 0`, and **drop the `aspect-ratio`** — it now gets the leftover box and `FIT` letterboxes the 518:632 canvas inside it. `min-height: 0` is required or the flex item refuses to shrink below its content size.
-- Decision 8's floor: `min-height` of roughly **320px** (≈0.5× scale, 37px grid cells) on `#canvas-container`. Once the floor binds, the column exceeds `100dvh` and the page scrolls — which is the intended fallback. Tune the value by eye; 0.5× is a starting guess, not a measured one.
+**Middle tier — `@media (max-width: 1120px)`:**
+- `flex-direction: column`, `justify-content: safe center`, `gap: 24px`.
+- `#dashboard, #canvas-container { flex: 0 0 auto }` — neither panel flexes, so both keep their original size and the column overflows rather than shrinking.
 
-**Text sizing** — under Decision 7 the dashboard's height is subtracted directly from the board, so this is now sizing, not just legibility:
-- `.rules`: `font-size: 12pt` → a `clamp()`.
-- `#welcome-message`: same treatment.
-- Consider tightening `.rule-container` spacing in the stacked block; every pixel saved goes to the canvas.
-
-### `css/shared.css` — panel and button sizing
-
-- `.panel` keeps its fixed size as the default (desktop unchanged) and is relaxed inside the stacked media query.
-- `.button`: `width: 60%` gains a `min-width` so it stays tappable, and `font-size: 20px` becomes a `clamp()` so it doesn't overflow at 320px. Its `margin-top: 10px` also comes out of the canvas budget on a phone.
-- `.form-field`: `font-size: 16px` minimum — under 16px, iOS Safari auto-zooms on focus and breaks the login layout mid-interaction.
+**Phone tier — `@media (max-width: 560px)`:**
+- `#canvas-container { width: min(300px, calc(100% - var(--panel-border) * 2)) }` — the fixed board; height follows from the base `aspect-ratio`.
+- `#dashboard { height: auto; max-width: min(306px, 100%); padding-bottom: 8px }` — 306 is 300 plus the canvas border, which is what makes the widths match.
+- `gap: 10px`, `padding: 12px var(--panel-border)`, `.rules { margin: 5px 0 }`, type stepped down once.
+- The tightened padding and margins are load-bearing: without them the column runs 15px over a 640px-tall screen.
 
 ### `css/login.css`
 
-`#nav-card-container` gets `min-height: 100dvh` so it can grow past the viewport. It needs no `align-items` change — per hazard A it never center-clips, since it sets no `align-items` at all. `#nav-card`'s `margin-top: 150px`, `height: 60%`, `width: 50%` become responsive (auto margins, `height: auto`, a percentage width with a `max-width`). Today on a 390px phone that card is **195px wide** with `form { width: 80% }` inside it — 156px, narrower than the `Press Start 2P` heading — so the forms are currently unusable there. Decision 6 permits adjusting `border-radius: 10%` / `box-shadow`; the percentage radius distorts once the card's aspect ratio changes.
+`#nav-card-container` gets `min-height: 100dvh` and the hazard-A treatment. `#nav-card`'s `width: 50%; height: 60%; margin-top: 150px` becomes `width: 100%; max-width: 520px; height: auto` with auto margins — the old rule gave a 195px card holding 156px forms on a 390px phone. `border-radius: 10%` → `16px`, since a percentage radius distorts once the aspect ratio changes.
 
 ### `css/leaderboard.css`
 
-`#leaderboard-page` gets the full hazard-A fix — it is a `flex-direction: row` with `align-items: center`, so it clips exactly like `#game-container`: `min-height: 100dvh`, `align-items: center` then `align-items: safe center`, and vertical padding. `#leaderboard-container` releases its fixed panel size in the stacked media query. `#leaderboard li` gets `overflow-wrap: break-word` and a `clamp()`ed font size — `Press Start 2P` is wide and a long username will overflow at 390px. Preserve the "only the list scrolls" behavior where there's room; below that the page scrolls so "Return to Game" stays reachable.
+`#leaderboard-page` gets the same `min-height` + hazard-A treatment. `#leaderboard li` gets `overflow-wrap: break-word`. Type stepped at 560px. The "only the list scrolls" behaviour is preserved.
 
 ### No HTML changes
 
-All three pages already have a correct `<meta name="viewport">`. Verify nothing in CSS defeats it. No new files, no new elements.
+All three pages already had a correct viewport meta. No new files, no new elements.
 
 ## Verification
 
-Run it locally — `lite-server` (or any static server) from the repo root, with the `rave-mom-api` backend running so login works.
+A static server (`python3 -m http.server`) plus Chrome. Two notes for anyone repeating this:
 
-**Desktop, `index.html`:**
-1. Wide window: dashboard left, canvas right, canvas exactly 518x632, crisp, no upscaling.
-2. Drag narrower past ~1120px: reflows live to dashboard-above-canvas, no reload, nothing clipped.
-3. Drag **short** (below ~640px tall) at full width: layout unchanged, canvas **still 518x632**, vertical scrollbar appears, and scrolling reaches both the top of the dashboard and the bottom of the canvas. This is the hazard-A and hazard-C check and the most likely thing to be wrong.
-4. Play a full game: click-to-start, arrow-key movement, collect a rave girl, get hit by a laser, confirm the score POST fires, then click-to-play-again.
-5. After game over, Log Out and Leaderboard appear in both layouts without shifting the dashboard.
+- **macOS Chrome won't resize its window below ~600px**, so phone widths can't be tested by dragging. Load the page in a fixed-size **iframe** — it gets its own viewport for media queries and `vw` units — or use the DevTools device toolbar.
+- **Visiting `login.html` wipes the session** (`js/login.js` calls `localStorage.clear()`), after which `js/session-guard.js` bounces `index.html` back. Seed `token` / `user_id` / `username` *after* any visit to the login page.
 
-**Mobile** — DevTools emulation first, then a **real iPhone**, which is required here:
-6. 390x844 portrait: stacked column, everything visible at once, **no scrolling in either direction**. Measure the rendered canvas — it should be noticeably smaller than 518x632.
-7. Same device with Safari's address bar **expanded**: still no scrolling. This is what `dvh` buys and what DevTools cannot reproduce — if it fails here, `100vh` leaked in somewhere.
-8. 844x390 landscape: above the width breakpoint, so side-by-side and scrolling. Nothing hidden.
-9. Squeeze the height until the canvas floor binds (Decision 8): confirm the canvas stops shrinking and the page starts scrolling, and that the transition doesn't flicker while dragging.
-10. 320px width: text doesn't overflow, canvas readable. **Compare `image-rendering: pixelated` against the default here** — at non-integer downscale, nearest-neighbour can drop pixel rows and look worse than smoothing. Pick whichever actually looks better and note the choice.
-11. `login.html` at 390x844: both forms usable, tapping a field does not zoom.
-12. `leaderboard.html` at 390x844: full top ten, no horizontal overflow, "Return to Game" reachable.
+Results are recorded in the spec's Acceptance Criteria. Summary: widths match exactly in every stacked layout, no horizontal scrolling at any width from 320px up, the canvas is native above the phone tier and 300x366 below it, type is constant above 560px, and a real click on a scaled canvas starts the game with gameplay coordinates unaffected.
 
-**All pages:** background image still covers the full viewport when content is *shorter* than the window — the `height: 100%` → `min-height` change is the thing most likely to break this.
+**Two things remain unverified** and need a real device or a full playthrough:
+
+1. **A real game over** — the `gameState.playerloses.once('animationrepeat', …)` handoff was never exercised end to end.
+2. **iOS Safari's collapsing address bar** — `dvh` is in place, but DevTools emulation doesn't reproduce it.
 
 **Before merge:** `firebase deploy` must still report **70 files**.
