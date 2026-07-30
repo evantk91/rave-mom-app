@@ -18,13 +18,29 @@
     background-color: black;
 }
 
-body, html {
+/* `html` keeps a definite height so page containers have something to size
+   against; `body` only takes it as a *minimum* so content taller than the
+   viewport grows the body rather than overflowing a box fixed at 100%. That's
+   what lets short windows scroll instead of clipping. */
+html {
     height: 100%;
     background-color: black;
 }
 
+/* The default 8px UA margin has to go: the page containers are sized with
+   100dvh, so any margin around them overflows the viewport by exactly that much
+   and produces a permanent scrollbar on a page that otherwise fits. */
+body {
+    min-height: 100%;
+    margin: 0;
+    background-color: black;
+}
+
+/* Fluid width, fixed maximum: identical to the old fixed 524px on any window
+   wide enough for it, and shrinks to fit once the viewport is narrower. */
 .panel {
-    width: var(--panel-outer-width);
+    width: 100%;
+    max-width: var(--panel-outer-width);
     height: var(--panel-outer-height);
     border: var(--panel-border) solid var(--panel-border-color);
 }
@@ -42,10 +58,27 @@ body, html {
     padding-top: 5px;
     padding-bottom: 5px;
     width: 60%;
+    min-width: min(200px, 100%);
+    max-width: 100%;
     font-size: 20px;
     font-family: 'Press Start 2P', cursive;
 }
 
+/* Press Start 2P is a wide face: at 20px, "Return to Game" is ~280px of label,
+   which overflows a 60%-wide button once the panel narrows. One step down at
+   the mobile breakpoint rather than scaling with the viewport, so the type
+   holds its original size everywhere above it. */
+@media (max-width: 560px) {
+    .button {
+        font-size: 11px;
+    }
+}
+
+/* 16px is the floor below which iOS Safari auto-zooms the page when an input is
+   focused — that rescales the whole layout mid-login, so it must not go under. */
 .form-field {
     background-color: white;
+    font-size: max(16px, 1rem);
+    padding: 8px;
+    width: 100%;
 }
