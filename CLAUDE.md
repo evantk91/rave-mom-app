@@ -60,7 +60,20 @@ The public root is `.` — the whole repo — so **hosting is opt-out, not opt-i
 
 The first two rows are the subtle part and both are needed. `**/.*` matches a path whose *final* segment starts with a dot, so it excludes `.git` but **not** `.git/config` — on its own it left the entire `.git` directory publicly fetchable, which is how the git history and an unpushed local branch ended up on the live site. `**/.*/**` is what covers files nested inside a dot-directory. Don't drop either one.
 
-A correct deploy reports **70 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above.
+A correct deploy reports **71 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
+
+### Use a current CLI — an old one silently publishes an empty site
+
+**Check `firebase --version` before deploying.** `firebase` is not always on `PATH`; there are old copies inside nvm Node installs (`~/.nvm/versions/node/*/bin/firebase`), and **version 8.2.0 does not glob this `ignore` list correctly — it matches every file and deploys nothing**:
+
+```
+i  hosting[rave-mom]: found 0 files in .
+✔  Deploy complete!
+```
+
+It exits successfully with a green tick. The only signal is `found 0 files`, and the result is a live site that 404s on every URL including `index.html`. If `firebase --version` isn't recent, deploy with `npx firebase-tools@latest deploy --only hosting` instead — it reads the same stored login, so no re-auth is needed.
+
+**Always read the file count in the output**, and check the live site afterwards. `curl -s -o /dev/null -w "%{http_code}" https://rave-mom.web.app/index.html` should be `200`, and `/.git/config`, `/CLAUDE.md`, `/_specs/…` should each be `404`.
 
 ## Architecture
 
