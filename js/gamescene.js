@@ -605,25 +605,34 @@ class GameScene extends Phaser.Scene {
     
     update() {
         if(gameState.player.enable) {
+            // Clear both axes before dispatching, so exactly one direction is
+            // ever in effect. Each branch below sets a single axis and used to
+            // leave the other holding whatever velocity it was last given —
+            // so holding right and tapping down set velocity to (192, 192) and
+            // the player kept travelling diagonally at 271px/s, 41% faster
+            // than intended, until *every* key was released. Releasing down
+            // alone did not stop it.
+            //
+            // This also replaces the two branches that used to sit at the end
+            // of the chain. The first tried to suppress diagonals but was
+            // unreachable: any diagonal combination has a key that satisfies an
+            // earlier branch, so `down`/`up` always matched first. The second
+            // handled "no keys held", which the unconditional clear now covers.
+            gameState.player.setVelocityX(0);
+            gameState.player.setVelocityY(0);
+
             if(gameState.cursors.down.isDown && gameState.player.y <= 481) {
                 gameState.player.setVelocityY(192);
                 gameState.player.anims.play('walk-down', true);
             } else if(gameState.cursors.up.isDown && gameState.player.y >= 37) {
                 gameState.player.setVelocityY(-192);
                 gameState.player.anims.play('walk-up', true);
-            } else if(gameState.cursors.right.isDown && gameState.player.x <= 481) { 
+            } else if(gameState.cursors.right.isDown && gameState.player.x <= 481) {
                 gameState.player.setVelocityX(192);
                 gameState.player.anims.play('walk-right', true);
             } else if(gameState.cursors.left.isDown && gameState.player.x >= 37) {
                 gameState.player.setVelocityX(-192);
                 gameState.player.anims.play('walk-left', true);
-            } else if(((gameState.cursors.up.isDown) && (gameState.cursors.right.isDown)) || ((gameState.cursors.up.isDown) && (gameState.cursors.left.isDown)) ||
-            ((gameState.cursors.down.isDown) && (gameState.cursors.right.isDown)) || ((gameState.cursors.down.isDown) && (gameState.cursors.left.isDown))) {
-                gameState.player.setVelocityX(0);
-                gameState.player.setVelocityY(0); 
-            } else {
-                gameState.player.setVelocityX(0);
-                gameState.player.setVelocityY(0);   
             }
         }
     }
