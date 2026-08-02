@@ -621,18 +621,51 @@ class GameScene extends Phaser.Scene {
             gameState.player.setVelocityX(0);
             gameState.player.setVelocityY(0);
 
-            if(gameState.cursors.down.isDown && gameState.player.y <= 481) {
-                gameState.player.setVelocityY(192);
-                gameState.player.anims.play('walk-down', true);
-            } else if(gameState.cursors.up.isDown && gameState.player.y >= 37) {
-                gameState.player.setVelocityY(-192);
-                gameState.player.anims.play('walk-up', true);
-            } else if(gameState.cursors.right.isDown && gameState.player.x <= 481) {
-                gameState.player.setVelocityX(192);
-                gameState.player.anims.play('walk-right', true);
-            } else if(gameState.cursors.left.isDown && gameState.player.x >= 37) {
-                gameState.player.setVelocityX(-192);
-                gameState.player.anims.play('walk-left', true);
+            // The bounds used to gate the *input* (`up.isDown && y >= 37`) and
+            // were tested before the move, so the player took one more 3.2px
+            // step, landed outside the boundary, and the test then failed for
+            // good. Clamping the position instead keeps the player on the board
+            // and keeps a direction from disabling itself by overshooting.
+            gameState.player.x = Phaser.Math.Clamp(gameState.player.x, 37, 481);
+            gameState.player.y = Phaser.Math.Clamp(gameState.player.y, 37, 481);
+
+            // Most recently pressed key wins. Phaser stamps every Key with
+            // timeDown, so the direction in effect is simply the held key with
+            // the latest stamp — no keydown bookkeeping of our own.
+            //
+            // An if/else chain can't express this: it hardcodes one fixed
+            // priority order, which made the controls asymmetric. Under the old
+            // `down > up > right > left`, pressing up while holding right took
+            // over, but pressing right while holding up did nothing at all.
+            const directions = [
+                { key: gameState.cursors.up,    vx: 0,    vy: -192, anim: 'walk-up' },
+                { key: gameState.cursors.down,  vx: 0,    vy: 192,  anim: 'walk-down' },
+                { key: gameState.cursors.left,  vx: -192, vy: 0,    anim: 'walk-left' },
+                { key: gameState.cursors.right, vx: 192,  vy: 0,    anim: 'walk-right' }
+            ];
+
+            const held = directions.filter(direction => direction.key.isDown);
+
+            if(held.length > 0) {
+                const active = held.reduce((latest, direction) =>
+                    direction.key.timeDown >= latest.key.timeDown ? direction : latest);
+
+                // At an edge the chosen direction stays chosen and simply
+                // produces no movement, rather than falling through to another
+                // one. Falling through is what used to send you sideways along
+                // the top row while you were holding up.
+                const blocked =
+                    (active.vy < 0 && gameState.player.y <= 37) ||
+                    (active.vy > 0 && gameState.player.y >= 481) ||
+                    (active.vx < 0 && gameState.player.x <= 37) ||
+                    (active.vx > 0 && gameState.player.x >= 481);
+
+                if(!blocked) {
+                    gameState.player.setVelocityX(active.vx);
+                    gameState.player.setVelocityY(active.vy);
+                }
+
+                gameState.player.anims.play(active.anim, true);
             }
         }
     }
