@@ -647,6 +647,22 @@ class GameScene extends Phaser.Scene {
             const held = directions.filter(direction => direction.key.isDown);
 
             if(held.length > 0) {
+                // A max-by: fold over everything held, carrying the larger
+                // timeDown forward, so this works for three or four keys at
+                // once and not just a pair.
+                //
+                // What makes the stamp usable is that Phaser writes it only on
+                // the down *transition* — `Key.onDown` sets timeDown inside an
+                // `if (!this.isDown)` guard. The OS fires repeated keydown
+                // events while a key is held, and those bump `repeats` but
+                // leave timeDown frozen at the moment of the press. So the
+                // stamps stay in press order for the whole hold and we don't
+                // have to track key order ourselves.
+                //
+                // `>=` only matters for two keys stamped in the same event
+                // batch; it breaks the tie toward the end of `directions`.
+                // Which one wins is arbitrary, but it has to be *stable*, or a
+                // tie would flip direction from frame to frame.
                 const active = held.reduce((latest, direction) =>
                     direction.key.timeDown >= latest.key.timeDown ? direction : latest);
 
