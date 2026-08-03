@@ -68,8 +68,18 @@
             // create() hasn't necessarily run — the game sits on the start menu
             // until you click, and GameScene builds cursors and the player only
             // after its preload finishes.
-            const cursors = window.gameState && gameState.cursors;
-            const player = window.gameState && gameState.player;
+            //
+            // The guard has to be typeof, not `window.gameState`. js/game.js
+            // declares gameState as a top-level const in a classic script, so
+            // it lands in the global lexical environment rather than on the
+            // global object: every later script can see the name, but
+            // window.gameState is undefined. Testing that property meant this
+            // logger bailed on every frame and printed nothing from the day it
+            // landed, while still reporting itself as on.
+            if(typeof gameState === "undefined") return;
+
+            const cursors = gameState.cursors;
+            const player = gameState.player;
             if(!cursors || !player || !player.body) return;
 
             const names = ["up", "down", "left", "right"];
