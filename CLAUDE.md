@@ -60,7 +60,7 @@ The public root is `.` — the whole repo — so **hosting is opt-out, not opt-i
 
 The first two rows are the subtle part and both are needed. `**/.*` matches a path whose *final* segment starts with a dot, so it excludes `.git` but **not** `.git/config` — on its own it left the entire `.git` directory publicly fetchable, which is how the git history and an unpushed local branch ended up on the live site. `**/.*/**` is what covers files nested inside a dot-directory. Don't drop either one.
 
-A correct deploy reports **72 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
+A correct deploy reports **73 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
 
 ### Use a current CLI — an old one silently publishes an empty site
 
@@ -104,13 +104,14 @@ All scripts live in `js/`. Global scripts, no modules/bundler — load order mat
 2. Phaser 3 (CDN)
 
 `js/clear-stored-password.js` sits right after the guard but is `defer`red, unlike it: nothing reads the key it deletes, so it has no ordering dependency and there's no reason to put a second blocking request on the critical path. If the guard redirects, the deferred script never runs — which is fine, because `js/login.js` clears all of storage on arrival anyway.
-3. `js/startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
-4. `js/gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
-5. `js/game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
-6. `js/dashboard.js` — welcome message, logout, and navigation to the leaderboard. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above.
-7. `js/input-debug.js` — arrow-key diagnostics. Also `defer`red in `<head>`, and order-independent: it only defines `window.inputDebug` and reads `gameState` lazily, when one of its functions is called.
+3. `js/board-data.js` — defines the `BOARD` global: every fixed coordinate the maze is made of. Must precede `js/gamescene.js`, which reads it.
+4. `js/startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
+5. `js/gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
+6. `js/game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
+7. `js/dashboard.js` — welcome message, logout, and navigation to the leaderboard. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above.
+8. `js/input-debug.js` — arrow-key diagnostics. Also `defer`red in `<head>`, and order-independent: it only defines `window.inputDebug` and reads `gameState` lazily, when one of its functions is called.
 
-Note that steps 2–5 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script.
+Note that steps 2–6 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script.
 
 `login.html` and `leaderboard.html` have no such subtlety — each loads a single deferred script (`js/login.js` / `js/leaderboard.js`), with `js/session-guard.js` first and blocking on the latter.
 
@@ -123,13 +124,24 @@ Two details are load-bearing:
 - The reveal hangs off `gameState.playerloses.once('animationrepeat', ...)`, **not** `animationcomplete`. The `playerloses` animation is created with `repeat: -1`, so it never completes and `animationcomplete` would never fire; `animationrepeat` fires when the first loop ends.
 - `css/game.css` uses `visibility: hidden` rather than `display: none`, so the hidden buttons still reserve their space and the dashboard doesn't shift when they appear.
 
-### Game grid & bomb system (`js/gamescene.js`)
-This is the most complex part of the codebase and the most likely place for future changes:
-- The play field is a 7x7 grid of 74px cells. `gameState.playerGridPositions` maps row/col to pixel coordinates; `getPlayerRow`/`getPlayerCol`/`getPlayerGridPosition` convert a sprite's pixel position back to a grid cell.
-- Two bomb sprites (`bomb1`, `bomb2`) each cycle through one of 40 hardcoded explosion patterns (`gameState.explosionPositions.bomb1`...`bomb40`), each a literal list of `[x, y]` danger tiles for that animation.
-- When a bomb's animation completes, if the player's current grid cell is in that pattern's danger list, it's game over: score is POSTed to the backend, player sprite is disabled, and a "click to play again" prompt appears. Otherwise a new random bomb pattern is picked and played.
-- "Rave girl" sprites (`ravegirl1`-`3`) spawn at random grid positions (`gameState.raveGirlLocations`, 40 positions) with collision checks to avoid overlapping each other or the player's start position. Colliding with the player scores a point, plays a heart animation, and relocates that rave girl.
-- Because explosion patterns and spawn locations are hand-authored coordinate arrays rather than derived from the grid programmatically, adding new bomb patterns or resizing the grid requires updating multiple parallel data structures consistently.
+### Board data (`js/board-data.js`)
+Every fixed coordinate lives in the `BOARD` global, separate from `gameState` because none of it changes during play. It is only ever read, never mutated, so one copy is shared across scene restarts.
+
+**The board is a 4x4 maze, not a 7x7 grid** — a natural mistake to make from the row names. There are 16 intersections at x,y in `{37, 185, 333, 481}`, joined by corridors whose midpoints are `{111, 259, 407}`. A cell is legal when at least one coordinate is on an intersection line, giving **40 cells** of the 49 a full grid would have. The missing 9 — both coordinates a midpoint — are exactly `BOARD.blockLocations`.
+
+- `blockLocations` — the 9 wall squares.
+- `cells` — every legal cell, in one flat list. Both consumers want it flat: the nearest-cell search scans all 40, and rave girls are drawn from all 40.
+- `explosionPositions` — 40 hand-authored blast patterns, `bomb1`...`bomb40`.
+
+There used to be three encodings of those 40 cells — a flat list, the same cells keyed by row, and a third derived by flattening the rows. Nothing ever asked which *row* the player was in; the row map existed only to produce the third list, which was provably identical to the first. **Don't reintroduce a row structure** unless something genuinely needs rows.
+
+The patterns and the cell list are hand-authored rather than generated, so resizing the maze means updating several structures consistently.
+
+### Gameplay (`js/gamescene.js`)
+- `getPlayerGridPosition` returns the **nearest** of the 40 cells by squared distance. It has to tolerate being between cells: movement is continuous at 192px/s, so the sprite advances 3.2px a frame and is rarely on a cell exactly. An earlier version classified by coordinate bands and could be 444px wrong.
+- Two bomb sprites each play a random pattern. When the animation completes, the player's nearest cell being in that pattern's list is game over — score POSTed, sprite disabled, "click to play again". Otherwise another pattern is picked.
+- Rave girls are placed by `drawRaveGirlPosition`, which filters occupied cells out *before* drawing rather than re-rolling. `cellsTouchingPlayer` excludes anything close enough to overlap the player, which is wider than just the player's own cell — bodies intersect within 69px and cells are 74px apart, so mid-corridor both neighbours are too close.
+- Relocation happens at **six** sites: the three collect handlers, and the three `animationcomplete` handlers, which fire every ~4s because the rave girl animations use `repeat: 0` and are replayed.
 
 ### Assets
 Sprites are authored in Aseprite (`sprite_sheets/*.aseprite files/`) and exported as PNG spritesheets (`sprite_sheets/png_sheets/`) loaded by `js/gamescene.js`/`js/startmenu.js` via `this.load.spritesheet(...)`.
