@@ -1,6 +1,8 @@
 # Plan: Hold-to-move touch controls
 
-Implements `_specs/touch-controls.md`. **Written before implementation** — unlike the other documents in this folder, this one is a plan of record rather than an account of what shipped. It should be corrected in place once the work is done and the browser has had its say.
+Implements `_specs/touch-controls.md`. **Built and verified on a real phone** — this document was written before implementation and has since been corrected in place, so it now reflects what actually shipped, including the one thing the plan got wrong.
+
+The plan held up: the approach, the file list, and all four Phaser findings were right, and the riskiest assumption survived its check. What it missed was a geometric consequence of its own dead zone that made a third of the board's cells unreachable — invisible on paper, obvious within a minute on a device.
 
 ## Context
 
@@ -55,8 +57,8 @@ Exposes:
 
 1. Pointer not down → clear all four flags and all latched state, return.
 2. On the rising edge, latch whether the touch began inside the board rect. A touch beginning outside it — on the score or game-over text — never moves the player for its whole lifetime.
-3. Clamp the pointer into the board rect, so a finger wandering off the edge keeps steering instead of stopping dead.
-4. Offset `dx, dy` from player to clamped point. If `|dx| <= 37 && |dy| <= 37` the touch is in the dead zone: clear all four flags **and clear the latched axis**, so the next departure picks fresh. This is what makes "dragged across the player" read as a clean stop-and-reverse rather than a stutter.
+3. Clamp the pointer into the board rect, so a finger wandering off the edge keeps steering instead of stopping dead, **then push a touch in the outer 37px strip to a point beyond the field** — see "What the plan got wrong" below.
+4. Offset `dx, dy` from player to the resulting point. If `|dx| <= 37 && |dy| <= 37` the touch is in the dead zone: clear all four flags **and clear the latched axis**, so the next departure picks fresh. This is what makes "dragged across the player" read as a clean stop-and-reverse rather than a stutter.
 5. Otherwise pick the axis with hysteresis: keep the latched axis unless the perpendicular offset exceeds the current one by the margin. With no latched axis, the larger offset wins and an exact tie resolves to horizontal.
 6. Set exactly one flag true, the other three false, stamping only on transition.
 
@@ -88,22 +90,55 @@ Add to the `canvas` rule: `touch-action: none`, `user-select: none` (plus `-webk
 | `index.html` | one script tag |
 | `CLAUDE.md` | tripwire, load order, touch model |
 
+## What the plan got wrong
+
+**The dead zone made the board's boundary cells unreachable.** Not awkward — impossible.
+
+To keep driving right, a touch has to land beyond `player + DEAD_ZONE`. The board stops at the field edge, so that band is squeezed against the rim as the player approaches it, and then runs out:
+
+| player x | thumb room on a phone |
+| --- | --- |
+| 400 | 46.9px |
+| 440 | 23.7px |
+| 460 | 12.2px |
+| 470 | 6.4px |
+| 478 | 1.7px |
+| 481 | no touch can move it at all |
+
+Every automated assertion passed with this in place, because each one tested a property in isolation and none asked "can the player reach the edge?". It took about a minute on a phone to notice.
+
+The fix, `reachOutward` in `js/touch-input.js`, sends a touch landing in the outer `DEAD_ZONE`-wide strip to a point *beyond* the field, so the whole border reads as "go to the edge". The band becomes a constant ~22px on a phone at every distance and on all four sides, and the interior is untouched — dead zone, dominant axis and hysteresis all measure the same before and after. The player drives to the boundary and pins there with the direction still engaged, which is what holding a key into a wall already does.
+
+**The lesson for the next plan:** a dead zone that travels with the player interacts with every hard boundary the player can reach. Nothing in the spec's edge cases covered it, because it isn't an edge case — it is a third of the board.
+
 ## Verification
 
-**Clock compatibility — first, because it invalidates the design if wrong.** Confirm a `KeyboardEvent`'s `timeStamp` and `performance.now()` share a time origin, by capturing a real keydown and comparing against a `performance.now()` taken beside it. If they differ, stamp touch from whatever source Phaser uses instead. Get this wrong and the arbitration breaks silently.
+**Clock compatibility — done first, because it invalidates the design if wrong.** Confirmed against a real trusted keydown: `event.timeStamp` 101557.9 vs `performance.now()` 101558.3, delta **0.4ms**, same time origin. `performance.now()` is therefore directly comparable with Phaser's `Key.timeDown`.
 
-**Automated, in the browser.** A game lasts seconds — shorter than one tool round-trip — so arm a self-driving harness in the page *before* starting, then read results afterwards. Assert:
+**Unit tests on the resolution, 14 assertions, all passing.** `TOUCH.update(pointer, player)` takes plain objects, so this runs deterministically and is immune to a bomb ending the game mid-test — which turned out to matter. Covered: dead zone on the player and at a 36px corner, engagement at 38px, all four dominant axes, an exact diagonal stable across five frames, hysteresis holding through a 4px lead and yielding to a decisive one, a touch beginning below the board staying inert even when dragged back on, and `timeDown` frozen while held but refreshed on re-transition.
 
-- dead zone: a touch within 37px on both axes leaves velocity at zero
-- arrival: a held point outside the zone brings the player to rest on reaching it, without oscillating
-- single axis: no sample ever has both velocity components non-zero
-- hysteresis: a point held near the 45-degree line does not alternate between frames
-- arbitration: key then touch → touch wins; touch then key → key wins; releasing the newer returns control to the older
-- region: a touch beginning below the board never moves the player, while tap-to-restart still fires
-- edges: a touch held into a wall leaves the player stationary rather than sliding along another axis
+**Integration into velocity**, driving `pointer1` as Phaser's touch manager would:
 
-**Regression.** Keyboard-only play unchanged: spawn at `(37, 37)`, ~9.6px per 50ms while held, clean stop on release, and the last-pressed-direction cases.
+```
+touchRight [192,0]   touchUp [0,-192]   everDiagonal false
+key then touch:  [0,-192] -> [192,0] -> [0,-192] on release
+touch then key:  [192,0] -> [0,-192] -> [192,0] on release
+touch below board: [0,0]
+```
 
-**Manual, on a real phone.** The two things automation cannot judge: whether the hysteresis margin feels stable, and whether the spec's Decision 2 — the player stopping on *arrival*, which turns one touch into "move to here and stop" — actually feels right. That is the only decision here that changes how the game plays, and it is far cheaper to revisit now than after the rest is polished.
+**Arrival**, on a clear corridor: from x=37 with a touch held at x=333, the player stops at exactly **296** — `333 − 37`, the dead-zone edge — with no overshoot and no oscillation.
+
+**Boundaries**, after the `reachOutward` fix: all four reached exactly, with `getPlayerGridPosition` reporting the boundary cell rather than an ambiguous neighbour.
+
+**On a real phone.** Confirmed the two things automation cannot judge — the hysteresis margin feels stable at 12px, and Decision 2's stop-on-arrival reads correctly rather than as the controls dropping out. This pass is also what surfaced the boundary gap.
+
+### Traps hit while verifying
+
+Worth knowing before writing the next harness against this game:
+
+- **Real `TouchEvent`s cannot be tested in a desktop browser.** Phaser auto-detects touch support; with none it builds no touch manager, `pointersTotal` stays 1, and `pointer1` is never driven. That is the correct production behaviour, but it means integration has to be tested by driving `pointer1` directly, and the genuine finger→pointer path needs a device.
+- **Monkey-patching `scene.update` to count frames reads zero even when the loop is running.** Phaser 3.16 caches it as `sys.sceneUpdate` at boot. Measure the loop by its effects instead.
+- **A game lasts seconds, shorter than one tool round-trip.** Arm a self-driving harness in the page before starting, then read results. Re-assert `gameEnded = false` and `player.enable = true` throughout, or stop the bomb animations — otherwise a run silently measures a dead player and reports all zeroes.
+- **Do not park the test player at (259,259)** or any other `BOARD.blockLocations` entry. It is inside a wall, and the collider quietly invalidates the result.
 
 **Deploy.** `firebase --version` current, output reads **74 files**, live 200s on the new script, and `/CLAUDE.md`, `/.git/config`, `/_specs/…`, `/_plans/…` all 404.
