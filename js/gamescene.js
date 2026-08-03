@@ -219,25 +219,42 @@ class GameScene extends Phaser.Scene {
         // meant to keep them off the player compared a number against the
         // [x, y] array the function returns, so it was never true. And rave
         // girl 2 re-rolled at most once, so she could still land on rave girl 1.
-        const playerCell = getPlayerGridPosition(gameState.player);
-
-        const [ravegirl1_x, ravegirl1_y] = drawRaveGirlPosition([playerCell]);
+        const [ravegirl1_x, ravegirl1_y] = drawRaveGirlPosition(cellsTouchingPlayer());
         gameState.ravegirl1 = this.physics.add.sprite(ravegirl1_x, ravegirl1_y, 'ravegirl1', 0)
 
-        const [ravegirl2_x, ravegirl2_y] = drawRaveGirlPosition([playerCell, [ravegirl1_x, ravegirl1_y]]);
+        const [ravegirl2_x, ravegirl2_y] = drawRaveGirlPosition([...cellsTouchingPlayer(), [ravegirl1_x, ravegirl1_y]]);
         gameState.ravegirl2 = this.physics.add.sprite(ravegirl2_x, ravegirl2_y, 'ravegirl2', 0)
 
-        const [ravegirl3_x, ravegirl3_y] = drawRaveGirlPosition([playerCell, [ravegirl1_x, ravegirl1_y], [ravegirl2_x, ravegirl2_y]]);
+        const [ravegirl3_x, ravegirl3_y] = drawRaveGirlPosition([...cellsTouchingPlayer(), [ravegirl1_x, ravegirl1_y], [ravegirl2_x, ravegirl2_y]]);
         gameState.ravegirl3 = this.physics.add.sprite(ravegirl3_x, ravegirl3_y, 'ravegirl3', 0)
 
         // Drops the taken cells before drawing rather than re-rolling until it
         // gets lucky, so there's no retry that can run long and no way to
-        // return a cell that's already occupied. 40 cells against at most four
+        // return a cell that's already occupied. 40 cells against at most five
         // exclusions, so the pool is never empty.
         function drawRaveGirlPosition(taken) {
             const free = gameState.raveGirlLocations.filter(cell =>
                 !taken.some(other => other[0] === cell[0] && other[1] === cell[1]));
             return free[Math.floor(Math.random() * free.length)];
+        }
+
+        // Every cell close enough that a rave girl placed there would already be
+        // touching the player. Arcade bodies are the frame sizes — 64x64 for the
+        // player, 74x74 for a rave girl — so they intersect once their centres
+        // are within 69px on both axes.
+        //
+        // Naming just the player's own cell isn't enough, because the player is
+        // hardly ever standing on one. Mid-corridor they sit 37px from the two
+        // cells either side, and a rave girl dropped on either would be inside
+        // the player the instant she appeared — collected on the spot for a free
+        // point, then relocated again. Across every position the player can
+        // occupy, excluding the single nearest cell still leaves an overlapping
+        // cell drawable 85% of the time; this leaves none, and costs at most
+        // three of the 40 cells.
+        function cellsTouchingPlayer() {
+            const touching = (a, b) => Math.abs(a - b) < (64 + 74) / 2;
+            return gameState.raveGirlLocations.filter(cell =>
+                touching(cell[0], gameState.player.x) && touching(cell[1], gameState.player.y));
         }
         
         const blocks = this.physics.add.staticGroup();
@@ -423,13 +440,12 @@ class GameScene extends Phaser.Scene {
         })
 
         gameState.ravegirl1.on('animationcomplete', function() {
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
+            const [raveGirlX, raveGirlY] = drawRaveGirlPosition([
+                ...cellsTouchingPlayer(),
+                [gameState.ravegirl2.x, gameState.ravegirl2.y],
+                [gameState.ravegirl3.x, gameState.ravegirl3.y]
+            ]);
 
-            while (((raveGirlX === gameState.ravegirl2.x) && (raveGirlY === gameState.ravegirl2.y)) || 
-            ((raveGirlX === gameState.ravegirl3.x) && (raveGirlY === gameState.ravegirl3.y))) {
-                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
-            }
-            
             gameState.ravegirl1.x = raveGirlX;
             gameState.ravegirl1.y = raveGirlY;
             gameState.ravegirl1.setVelocityX(0); gameState.ravegirl1.setVelocityY(0)
@@ -437,12 +453,11 @@ class GameScene extends Phaser.Scene {
         })
 
         gameState.ravegirl2.on('animationcomplete', function() {
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]; 
-            
-            while (((raveGirlX === gameState.ravegirl1.x) && (raveGirlY === gameState.ravegirl1.y)) || 
-            ((raveGirlX === gameState.ravegirl3.x) && (raveGirlY === gameState.ravegirl3.y))) {
-                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
-            }
+            const [raveGirlX, raveGirlY] = drawRaveGirlPosition([
+                ...cellsTouchingPlayer(),
+                [gameState.ravegirl1.x, gameState.ravegirl1.y],
+                [gameState.ravegirl3.x, gameState.ravegirl3.y]
+            ]);
 
             gameState.ravegirl2.x = raveGirlX;
             gameState.ravegirl2.y = raveGirlY;
@@ -451,12 +466,11 @@ class GameScene extends Phaser.Scene {
         })
 
         gameState.ravegirl3.on('animationcomplete', function() {
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
-            
-            while (((raveGirlX === gameState.ravegirl1.x) && (raveGirlY === gameState.ravegirl1.y)) || 
-            ((raveGirlX === gameState.ravegirl2.x) && (raveGirlY === gameState.ravegirl2.y))) {
-                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
-            }
+            const [raveGirlX, raveGirlY] = drawRaveGirlPosition([
+                ...cellsTouchingPlayer(),
+                [gameState.ravegirl1.x, gameState.ravegirl1.y],
+                [gameState.ravegirl2.x, gameState.ravegirl2.y]
+            ]);
 
             gameState.ravegirl3.x = raveGirlX;
             gameState.ravegirl3.y = raveGirlY;
@@ -472,12 +486,11 @@ class GameScene extends Phaser.Scene {
                 gameState.heart.x = 111; gameState.heart.y = 111;
             })
 
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
-            
-            while (((raveGirlX === gameState.ravegirl2.x) && (raveGirlY === gameState.ravegirl2.y)) || 
-            ((raveGirlX === gameState.ravegirl3.x) && (raveGirlY === gameState.ravegirl3.y))) {
-                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
-            }
+            const [raveGirlX, raveGirlY] = drawRaveGirlPosition([
+                ...cellsTouchingPlayer(),
+                [gameState.ravegirl2.x, gameState.ravegirl2.y],
+                [gameState.ravegirl3.x, gameState.ravegirl3.y]
+            ]);
 
             gameState.ravegirl1.x = raveGirlX; gameState.ravegirl1.y = raveGirlY;
             gameState.ravegirl1.setVelocityX(0); gameState.ravegirl1.setVelocityY(0);
@@ -495,12 +508,11 @@ class GameScene extends Phaser.Scene {
                 gameState.heart.x = 111; gameState.heart.y = 111;
             });
 
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
-            
-            while (((raveGirlX === gameState.ravegirl1.x) && (raveGirlY === gameState.ravegirl1.y)) || 
-            ((raveGirlX === gameState.ravegirl3.x) && (raveGirlY === gameState.ravegirl3.y))) {
-                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
-            }
+            const [raveGirlX, raveGirlY] = drawRaveGirlPosition([
+                ...cellsTouchingPlayer(),
+                [gameState.ravegirl1.x, gameState.ravegirl1.y],
+                [gameState.ravegirl3.x, gameState.ravegirl3.y]
+            ]);
 
             gameState.ravegirl2.x = raveGirlX; gameState.ravegirl2.y = raveGirlY;
             gameState.ravegirl2.setVelocityX(0); gameState.ravegirl2.setVelocityY(0);
@@ -518,12 +530,11 @@ class GameScene extends Phaser.Scene {
                 gameState.heart.x = 111; gameState.heart.y = 111;
             });
 
-            let [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)];
-            
-            while (((raveGirlX === gameState.ravegirl1.x) && (raveGirlY === gameState.ravegirl1.y)) || 
-            ((raveGirlX === gameState.ravegirl2.x) && (raveGirlY === gameState.ravegirl2.y))) {
-                [raveGirlX, raveGirlY] = gameState.raveGirlLocations[Math.floor(Math.random() * 40)]
-            }
+            const [raveGirlX, raveGirlY] = drawRaveGirlPosition([
+                ...cellsTouchingPlayer(),
+                [gameState.ravegirl1.x, gameState.ravegirl1.y],
+                [gameState.ravegirl2.x, gameState.ravegirl2.y]
+            ]);
 
             gameState.ravegirl3.x = raveGirlX; gameState.ravegirl3.y = raveGirlY;
             gameState.ravegirl3.setVelocityX(0); gameState.ravegirl3.setVelocityY(0);
