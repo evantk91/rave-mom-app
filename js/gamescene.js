@@ -22,174 +22,6 @@ class GameScene extends Phaser.Scene {
             this.load.spritesheet(`bomb${i}`, `./sprite_sheets/png_sheets/bomb${i}.png`, {frameWidth: 518, frameHeight: 518})
         }
 
-        gameState.blockLocations = [
-            [111, 111], [111, 259], [111, 407],
-            [259, 111], [259, 259], [259, 407],
-            [407, 111], [407, 259], [407, 407],
-        ]
-
-        gameState.raveGirlLocations = [
-            [37, 37], [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [481, 37],
-            [37, 111], [185, 111], [333, 111], [481, 111],
-            [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185],
-            [37, 259], [185, 259], [333, 259], [481, 259],
-            [37, 333], [111, 333], [185, 333], [259, 333], [333, 333], [407, 333], [481, 333],
-            [37, 407], [185, 407], [333, 407], [481, 407],
-            [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
-        ]
-
-        gameState.playerGridPositions = {
-            row1: [
-                [37, 37], [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [481, 37]
-            ],
-            row2: [
-                [37, 111], [185, 111], [333, 111], [481, 111]
-            ],
-            row3: [
-                [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185]
-            ],
-            row4: [
-                [37, 259], [185, 259], [333, 259], [481, 259]
-            ],
-            row5: [
-                [37, 333], [111, 333], [185, 333], [259, 333], [333, 333], [407, 333], [481, 333]
-            ],
-            row6: [
-                [37, 407], [185, 407], [333, 407], [481, 407]
-            ],
-            row7: [
-                [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
-            ]
-        }
-
-        // The same 40 cells as one flat list, for the nearest-cell search in
-        // getPlayerGridPosition. Derived rather than typed out, so it can't
-        // drift from the rows above the way a hand-copied list would.
-        gameState.gridCells = Object.values(gameState.playerGridPositions).flat()
-
-        gameState.explosionPositions = {
-            bomb1: [
-                [37, 37], [111, 37], [185, 37], [259, 37], [37, 111], [37, 185], [37, 259]
-            ],
-            bomb2: [
-                [37, 37], [111, 37], [185, 37], [259, 37], [333, 37]
-            ],
-            bomb3: [
-                [37, 37], [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [185, 111], [185, 185], [185, 259]
-            ],
-            bomb4: [
-                [37, 37], [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [481, 37]
-            ],
-            bomb5: [
-                [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [481, 37], [333, 111], [333, 185], [333, 259]
-            ],
-            bomb6: [
-                [185, 37], [259, 37], [333, 37], [407, 37], [481, 37]
-            ],
-            bomb7: [
-                [259, 37], [333, 37], [407, 37], [481, 37], [481, 111], [481, 185], [481, 259]
-            ],
-            bomb8: [
-                [37, 37], [37, 111], [37, 185], [37, 259], [37, 333]
-            ],
-            bomb9: [
-                [185, 37], [185, 111], [185, 185], [185, 259], [185, 333]
-            ],
-            bomb10: [
-                [333, 37], [333, 111], [333, 185], [333, 259], [333, 333]
-            ],
-            bomb11: [
-                [481, 37], [481, 111], [481, 185], [481, 259], [481, 333]
-            ],
-            bomb12: [
-                [37, 185], [111, 185], [185, 185], [259, 185], [37, 37], [37, 111], [37, 259], [37, 333], [37, 407]
-            ],
-            bomb13: [
-                [37, 185], [111, 185], [185, 185], [259, 185], [333, 185]
-            ],
-            bomb14: [
-                [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [185, 37], [185, 111], [185, 259], [185, 333], [185, 407]
-            ],
-            bomb15: [
-                [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185]
-            ],
-            bomb16: [
-                [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185], [333, 37], [333, 111], [333, 259], [333, 333], [333, 407] 
-            ],
-            bomb17:[
-                [185, 185], [259, 185], [333, 185], [407, 185], [481, 185]
-            ],
-            bomb18: [
-                [259, 185], [333, 185], [407, 185], [481, 185], [481, 37], [481, 111], [481, 259], [481, 333], [481, 407]
-            ],
-            bomb19: [
-                [37, 37], [37, 111], [37, 185], [37, 259], [37, 333], [37, 407], [37, 481]
-            ],
-            bomb20: [
-                [185, 37], [185, 111], [185, 185], [185, 259], [185, 333], [185, 407], [185, 481]
-            ],
-            bomb21: [
-                [333, 37], [333, 111], [333, 185], [333, 259], [333, 333], [333, 407], [333, 481]
-            ],
-            bomb22: [
-                [481, 37], [481, 111], [481, 185], [481, 259], [481, 333], [481, 407], [481, 481]
-            ],
-            bomb23: [
-                [37, 333], [111, 333], [185, 333], [259, 333], [37, 111], [37, 185], [37, 259], [37, 407], [37, 481]
-            ],
-            bomb24: [
-                [37, 333], [111, 333], [185, 333], [259, 333], [333, 333]
-            ],
-            bomb25: [
-                [37, 333], [111, 333], [185, 333], [259, 333], [333, 333], [407, 333], [185, 111], [185, 185], [185, 259], [185, 407], [185, 481]
-            ],
-            bomb26: [
-                [37, 333], [111, 333], [185, 333], [259, 333], [333, 333], [407, 333], [481, 333]
-            ],
-            bomb27: [
-                [111, 333], [185, 333], [259, 333], [333, 333], [407, 333], [481, 333], [111, 333], [333, 185], [333, 259], [333, 407], [333, 481]
-            ],
-            bomb28: [
-                [185, 333], [259, 333], [333, 333], [407, 333], [481, 333]
-            ],
-            bomb29: [
-                [259, 333], [333, 333], [407, 333], [481, 333], [481, 111], [481, 185], [481, 259], [481, 407], [481, 481]
-            ],
-            bomb30: [
-                [37, 185], [37, 259], [37, 333], [37, 407], [37, 481]
-            ],
-            bomb31: [
-                [185, 185], [185, 259], [185, 333], [185, 407], [185, 481]
-            ],
-            bomb32: [
-                [333, 185], [333, 259], [333, 333], [333, 407], [333, 481]
-            ],
-            bomb33: [
-                [481, 185], [481, 259], [481, 333], [481, 407], [481, 481]
-            ],
-            bomb34: [
-                [37, 259], [37, 333], [37, 407], [37, 481], [111, 481], [185, 481], [259, 481]
-            ],
-            bomb35: [
-                [37, 481], [111, 481], [185, 481], [259, 481], [333, 481]
-            ],
-            bomb36: [
-                [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [185, 259], [185, 333], [185, 407]
-            ],
-            bomb37: [
-                [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
-            ],
-            bomb38: [
-                [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481], [333, 259], [333, 333], [333, 407]
-            ],
-            bomb39: [
-                [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
-            ],
-            bomb40: [
-                [259, 481], [333, 481], [407, 481], [481, 481], [259, 481], [333, 481], [407, 481]
-            ]
-        }
-
         gameState.gameEnded = false;
     }
     
@@ -233,7 +65,7 @@ class GameScene extends Phaser.Scene {
         // return a cell that's already occupied. 40 cells against at most five
         // exclusions, so the pool is never empty.
         function drawRaveGirlPosition(taken) {
-            const free = gameState.raveGirlLocations.filter(cell =>
+            const free = BOARD.raveGirlLocations.filter(cell =>
                 !taken.some(other => other[0] === cell[0] && other[1] === cell[1]));
             return free[Math.floor(Math.random() * free.length)];
         }
@@ -253,14 +85,14 @@ class GameScene extends Phaser.Scene {
         // three of the 40 cells.
         function cellsTouchingPlayer() {
             const touching = (a, b) => Math.abs(a - b) < (64 + 74) / 2;
-            return gameState.raveGirlLocations.filter(cell =>
+            return BOARD.raveGirlLocations.filter(cell =>
                 touching(cell[0], gameState.player.x) && touching(cell[1], gameState.player.y));
         }
         
         const blocks = this.physics.add.staticGroup();
 
-        for (let i = 0; i < gameState.blockLocations.length; i++) {
-            blocks.create(gameState.blockLocations[i][0], gameState.blockLocations[i][1], 'block');
+        for (let i = 0; i < BOARD.blockLocations.length; i++) {
+            blocks.create(BOARD.blockLocations[i][0], BOARD.blockLocations[i][1], 'block');
         }
 
         this.physics.add.collider(gameState.player, blocks)
@@ -343,7 +175,7 @@ class GameScene extends Phaser.Scene {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
             const scoresURL = "https://rave-mom-api.onrender.com/api/v1/scores"
 
-            if(isArrayInArray(gameState.explosionPositions[randBomb1], [playerX, playerY]) && gameState.gameEnded === false) {
+            if(isArrayInArray(BOARD.explosionPositions[randBomb1], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
                 gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
 
@@ -389,7 +221,7 @@ class GameScene extends Phaser.Scene {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
             const scoresURL = "https://rave-mom-api.onrender.com/api/v1/scores"
 
-            if(isArrayInArray(gameState.explosionPositions[randBomb2], [playerX, playerY]) && gameState.gameEnded === false) {
+            if(isArrayInArray(BOARD.explosionPositions[randBomb2], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
                 gameState.scoreText.setText(`GAME OVER... SCORE: ${gameState.score}`);
 
@@ -580,10 +412,10 @@ class GameScene extends Phaser.Scene {
         // midway between two cells reports one of them steadily instead of
         // alternating frame to frame.
         function getPlayerGridPosition(player) {
-            return gameState.gridCells.reduce((nearest, cell) => {
+            return BOARD.gridCells.reduce((nearest, cell) => {
                 const distance = (cell[0] - player.x) ** 2 + (cell[1] - player.y) ** 2;
                 return distance < nearest.distance ? { cell: cell, distance: distance } : nearest;
-            }, { cell: gameState.gridCells[0], distance: Infinity }).cell;
+            }, { cell: BOARD.gridCells[0], distance: Infinity }).cell;
         }
         
         // The Leaderboard and Log Out buttons live in the dashboard markup, but
