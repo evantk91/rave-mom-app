@@ -59,8 +59,13 @@ class GameScene extends Phaser.Scene {
             ],
             row7: [
                 [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
-            ]  
+            ]
         }
+
+        // The same 40 cells as one flat list, for the nearest-cell search in
+        // getPlayerGridPosition. Derived rather than typed out, so it can't
+        // drift from the rows above the way a hand-copied list would.
+        gameState.gridCells = Object.values(gameState.playerGridPositions).flat()
 
         gameState.explosionPositions = {
             bomb1: [
@@ -535,58 +540,38 @@ class GameScene extends Phaser.Scene {
             return contains;
         }
 
+        // The player is almost never standing exactly on a grid cell. Movement
+        // is continuous at 192px/s, so at 60fps the sprite advances 3.2px per
+        // frame and a bomb's animation finishes wherever it finishes. Any
+        // answer to "which cell is the player on?" has to cope with being
+        // between cells, because that is the normal case rather than the edge
+        // one.
+        //
+        // Taking the nearest of the 40 legal cells always names a cell the
+        // player is genuinely near: at most 37px away in a corridor, at most
+        // 74px in a block interior, where all four neighbours are equidistant.
+        //
+        // The pair of band tests this replaces had no such bound. Even rows
+        // hold only 4 legal cells, so getPlayerCol tested four narrow x bands
+        // and funnelled everything outside them into `return 3` — the widest
+        // gap being x in (74, 148]. A player at (75, 76) came back as
+        // (481, 111), 444px from the cell it should have named, on the
+        // opposite side of the board. Averaged over the whole board the old
+        // answer was 57px wrong.
+        //
+        // This result feeds the bomb collision check, so a wrong cell means
+        // being killed standing somewhere safe, or walking through a blast
+        // untouched.
+        //
+        // Squared distances order identically to real ones and skip 40 square
+        // roots. Exact ties keep the first cell found, so a player poised
+        // midway between two cells reports one of them steadily instead of
+        // alternating frame to frame.
         function getPlayerGridPosition(player) {
-            let playerRow = getPlayerRow(player)
-            let playerCol = getPlayerCol(player)
-            return gameState.playerGridPositions[playerRow][playerCol]
-        }
-        
-        function getPlayerRow(player) {
-            if(player.y <= 74) {
-                return 'row1';
-            } else if(player.y > 74 && player.y <= 148) {
-                return 'row2';
-            } else if(player.y > 148 && player.y <= 222) {
-                return 'row3';
-            } else if(player.y > 222 && player.y <= 296) {
-                return 'row4';
-            } else if(player.y > 296 && player.y <= 370) {
-                return 'row5';
-            } else if(player.y > 370 && player.y <= 444) {
-                return 'row6';
-            } else {
-                return 'row7';
-            }
-        }
-
-        function getPlayerCol(player) {
-            if(getPlayerRow(player) === 'row1' || getPlayerRow(player) === 'row3' || getPlayerRow(player) === 'row5' || getPlayerRow(player) === 'row7') {
-                if(player.x <= 74) {
-                    return 0;
-                } else if(player.x > 74 && player.x <= 148) {
-                    return 1;
-                } else if(player.x > 148 && player.x <= 222) {
-                    return 2;
-                } else if(player.x > 222 && player.x <= 296) {
-                    return 3;
-                } else if(player.x > 296 && player.x <= 370) {
-                    return 4;
-                } else if(player.x > 370 && player.x <= 444) {
-                    return 5;
-                } else {
-                    return 6;
-                }
-            } else {
-                if(player.x <= 74) {
-                    return 0;
-                } else if(player.x > 148 && player.x <= 222) {
-                    return 1;
-                } else if(player.x > 296 && player.x <= 370) {
-                    return 2;
-                } else {
-                    return 3;
-                }
-            }
+            return gameState.gridCells.reduce((nearest, cell) => {
+                const distance = (cell[0] - player.x) ** 2 + (cell[1] - player.y) ** 2;
+                return distance < nearest.distance ? { cell: cell, distance: distance } : nearest;
+            }, { cell: gameState.gridCells[0], distance: Infinity }).cell;
         }
         
         // The Leaderboard and Log Out buttons live in the dashboard markup, but
