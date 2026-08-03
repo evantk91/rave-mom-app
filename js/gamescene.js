@@ -178,7 +178,6 @@ class GameScene extends Phaser.Scene {
 
         gameState.bomb1.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
-            const scoresURL = "https://rave-mom-api.onrender.com/api/v1/scores"
 
             if(isArrayInArray(BOARD.explosionPositions[randBomb1], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
@@ -191,7 +190,7 @@ class GameScene extends Phaser.Scene {
                     }
                 }
 
-                fetch(scoresURL, {
+                fetch(API.scores, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -224,7 +223,6 @@ class GameScene extends Phaser.Scene {
 
         gameState.bomb2.on('animationcomplete', function() {
             [playerX, playerY] = getPlayerGridPosition(gameState.player)
-            const scoresURL = "https://rave-mom-api.onrender.com/api/v1/scores"
 
             if(isArrayInArray(BOARD.explosionPositions[randBomb2], [playerX, playerY]) && gameState.gameEnded === false) {
                 gameState.scoreText.x = 60
@@ -237,7 +235,7 @@ class GameScene extends Phaser.Scene {
                     }
                 }
 
-                fetch(scoresURL, {
+                fetch(API.scores, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
