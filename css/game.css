@@ -77,6 +77,22 @@ canvas {
     box-sizing: content-box;
     border: var(--panel-border) solid var(--panel-border-color);
     image-rendering: pixelated;
+
+    /* Playing is a touch-and-drag on the board, which is also the gesture the
+       browser reads as scroll, pull-to-refresh, and double-tap zoom. Without
+       this the page moves instead of the player.
+
+       Scoped to the canvas rather than body deliberately: the phone column is
+       tight enough that it may still need to scroll, and killing that outright
+       would trap the page. Only the board stops responding to gestures.
+
+       user-select and the tap highlight go with it — a held touch would
+       otherwise start selecting, and Android paints a grey flash on every
+       press. */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #welcome-message {
