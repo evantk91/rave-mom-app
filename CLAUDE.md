@@ -60,7 +60,7 @@ The public root is `.` — the whole repo — so **hosting is opt-out, not opt-i
 
 The first two rows are the subtle part and both are needed. `**/.*` matches a path whose *final* segment starts with a dot, so it excludes `.git` but **not** `.git/config` — on its own it left the entire `.git` directory publicly fetchable, which is how the git history and an unpushed local branch ended up on the live site. `**/.*/**` is what covers files nested inside a dot-directory. Don't drop either one.
 
-A correct deploy reports **71 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
+A correct deploy reports **72 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
 
 ### Use a current CLI — an old one silently publishes an empty site
 
@@ -108,6 +108,7 @@ All scripts live in `js/`. Global scripts, no modules/bundler — load order mat
 4. `js/gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
 5. `js/game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
 6. `js/dashboard.js` — welcome message, logout, and navigation to the leaderboard. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above.
+7. `js/input-debug.js` — arrow-key diagnostics. Also `defer`red in `<head>`, and order-independent: it only defines `window.inputDebug` and reads `gameState` lazily, when one of its functions is called.
 
 Note that steps 2–5 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script.
 
