@@ -62,6 +62,30 @@ const TOUCH = (function() {
     const onField = (x, y) =>
         x >= FIELD.left && x <= FIELD.right && y >= FIELD.top && y <= FIELD.bottom;
 
+    // Pushes a touch landing in the outer DEAD_ZONE-wide strip out past the
+    // field, so the whole border reads as "go to the edge".
+    //
+    // Without this the boundary cells are unreachable, not merely awkward. To
+    // keep driving right, a touch has to land beyond player + DEAD_ZONE — but
+    // the board stops at FIELD.right, so that band is squeezed against the rim
+    // as the player approaches it and runs out entirely:
+    //
+    //     player x    thumb room on a phone
+    //     400         46.9px
+    //     460         12.2px
+    //     478          1.7px
+    //     481         no touch can move it at all
+    //
+    // Sending the strip outward instead gives a constant ~21px target on a
+    // phone. The player then drives to the boundary and pins there with the
+    // direction still engaged, which is what holding a key into a wall already
+    // does — so the edge behaves the same whichever input you use.
+    function reachOutward(value, low, high) {
+        if(value <= low + DEAD_ZONE) return low - DEAD_ZONE;
+        if(value >= high - DEAD_ZONE) return high + DEAD_ZONE;
+        return value;
+    }
+
     function clearDirections() {
         directions.up.isDown = false;
         directions.down.isDown = false;
@@ -114,10 +138,11 @@ const TOUCH = (function() {
             return;
         }
 
-        // A finger that wanders off the edge keeps steering, rather than
-        // stopping the player dead on a slight overshoot.
-        const x = clamp(pointer.x, FIELD.left, FIELD.right);
-        const y = clamp(pointer.y, FIELD.top, FIELD.bottom);
+        // Clamp first so a finger that wanders off the edge keeps steering
+        // rather than stopping the player dead on a slight overshoot, then send
+        // the outer strip further out so the border can actually be reached.
+        const x = reachOutward(clamp(pointer.x, FIELD.left, FIELD.right), FIELD.left, FIELD.right);
+        const y = reachOutward(clamp(pointer.y, FIELD.top, FIELD.bottom), FIELD.top, FIELD.bottom);
         const dx = x - player.x;
         const dy = y - player.y;
 
