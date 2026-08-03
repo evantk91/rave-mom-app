@@ -1,13 +1,11 @@
 const leaderboard = document.querySelector("#leaderboard")
 const returnToGameButton = document.querySelector("#return-to-game")
 
-const scoresURL = "https://rave-mom-api.onrender.com/api/v1/scores"
-
 returnToGameButton.addEventListener("click", event => {
     window.location.href = "index.html"
 })
 
-fetch(scoresURL, {
+fetch(API.scores, {
     headers: {
         "Authorization": `bearer ${localStorage.getItem("token")}`
     }

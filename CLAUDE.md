@@ -60,7 +60,7 @@ The public root is `.` — the whole repo — so **hosting is opt-out, not opt-i
 
 The first two rows are the subtle part and both are needed. `**/.*` matches a path whose *final* segment starts with a dot, so it excludes `.git` but **not** `.git/config` — on its own it left the entire `.git` directory publicly fetchable, which is how the git history and an unpushed local branch ended up on the live site. `**/.*/**` is what covers files nested inside a dot-directory. Don't drop either one.
 
-A correct deploy reports **74 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
+A correct deploy reports **75 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
 
 ### Use a current CLI — an old one silently publishes an empty site
 
@@ -78,7 +78,11 @@ It exits successfully with a green tick. The only signal is `found 0 files`, and
 ## Architecture
 
 ### Frontend/backend split
-All game logic and UI live here; all persistence (users, auth tokens, scores) lives in the Rails API. The frontend talks to the backend over hardcoded URLs (e.g. `https://rave-mom-api.onrender.com/api/v1/users`, `/login`, `/scores`) — there's no env-based config, so backend URL changes require editing `js/login.js`, `js/leaderboard.js`, and `js/gamescene.js` directly (`js/gamescene.js` re-declares `scoresURL` inline in each of its two bomb handlers).
+All game logic and UI live here; all persistence (users, auth tokens, scores) lives in the Rails API.
+
+Every backend URL lives in `js/api.js`, which defines `API_BASE` and an `API` object with `users`, `login`, and `scores`. The paths are built from `API_BASE`, so **the host appears exactly once in the codebase** — pointing at a different backend is a one-line change. It is still hardcoded rather than configured: there is no build step to substitute an environment value, and the browser needs a URL it can reach.
+
+`js/api.js` loads on all three pages and must precede anything that fetches. On `index.html` that means a plain body script before `js/gamescene.js`; on `login.html` and `leaderboard.html` a deferred tag before their deferred page script, which works because deferred scripts run in document order and keeps the critical path free of another blocking request.
 
 Auth state is kept client-side in `localStorage` (`token`, `user_id`, `username`). Which page you're on determines how that state is treated: `js/login.js` clears all of `localStorage` on every load, so a fresh visit to the login page always starts clean; the scripts on `index.html` and `leaderboard.html` only ever *read* it, and clear it only on logout before navigating back to `login.html`. Requests to protected endpoints send `Authorization: bearer <token>`.
 
@@ -104,17 +108,18 @@ All scripts live in `js/`. Global scripts, no modules/bundler — load order mat
 2. Phaser 3 (CDN)
 
 `js/clear-stored-password.js` sits right after the guard but is `defer`red, unlike it: nothing reads the key it deletes, so it has no ordering dependency and there's no reason to put a second blocking request on the critical path. If the guard redirects, the deferred script never runs — which is fine, because `js/login.js` clears all of storage on arrival anyway.
-3. `js/board-data.js` — defines the `BOARD` global: every fixed coordinate the maze is made of. Must precede `js/gamescene.js`, which reads it.
-4. `js/touch-input.js` — defines the `TOUCH` global: hold-to-move touch controls. Must precede `js/gamescene.js`, which reads it, and follow `js/board-data.js`, whose `BOARD` it derives the play field from.
-5. `js/startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
-6. `js/gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
-7. `js/game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
-8. `js/dashboard.js` — welcome message, logout, and navigation to the leaderboard. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above.
-9. `js/input-debug.js` — arrow-key diagnostics. Also `defer`red in `<head>`, and order-independent: it only defines `window.inputDebug` and reads `gameState` lazily, when one of its functions is called.
+3. `js/api.js` — defines `API_BASE` and `API`: every backend URL. Must precede `js/gamescene.js`, which fetches with it.
+4. `js/board-data.js` — defines the `BOARD` global: every fixed coordinate the maze is made of. Must precede `js/gamescene.js`, which reads it.
+5. `js/touch-input.js` — defines the `TOUCH` global: hold-to-move touch controls. Must precede `js/gamescene.js`, which reads it, and follow `js/board-data.js`, whose `BOARD` it derives the play field from.
+6. `js/startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
+7. `js/gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
+8. `js/game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
+9. `js/dashboard.js` — welcome message, logout, and navigation to the leaderboard. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above.
+10. `js/input-debug.js` — arrow-key diagnostics. Also `defer`red in `<head>`, and order-independent: it only defines `window.inputDebug` and reads `gameState` lazily, when one of its functions is called.
 
-Note that steps 2–7 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script.
+Note that steps 2–8 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script.
 
-`login.html` and `leaderboard.html` have no such subtlety — each loads a single deferred script (`js/login.js` / `js/leaderboard.js`), with `js/session-guard.js` first and blocking on the latter.
+`login.html` and `leaderboard.html` have no such subtlety — each loads `js/api.js` and then its own page script, both deferred and therefore in document order, with `js/session-guard.js` first and blocking on the latter.
 
 Navigation targets in these scripts (`window.location.href = "index.html"`, etc.) are page URLs, not script paths, so they stay unprefixed even though the scripts moved into `js/`.
 

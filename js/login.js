@@ -1,6 +1,5 @@
 const userSignUp = document.querySelector("#new-user-signup")
 const signUpMessage = document.querySelector("#sign-up-message")
-const usersURL = "https://rave-mom-api.onrender.com/api/v1/users"
 
 localStorage.clear()
 
@@ -16,7 +15,7 @@ userSignUp.addEventListener("submit", event => {
         }
     }
 
-    fetch(usersURL, {
+    fetch(API.users, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -37,8 +36,6 @@ function displaySignUpMessage(response) {
 
 const userLogin = document.querySelector("#user-login")
 
-const loginURL = "https://rave-mom-api.onrender.com/api/v1/login"
-
 userLogin.addEventListener("submit", event => {
     event.preventDefault()
 
@@ -54,7 +51,7 @@ userLogin.addEventListener("submit", event => {
     // is a far worse thing to leak than a revocable token.
     localStorage.setItem("username", user.username)
 
-    fetch(loginURL, {
+    fetch(API.login, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
