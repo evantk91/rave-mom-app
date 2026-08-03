@@ -60,7 +60,7 @@ The public root is `.` — the whole repo — so **hosting is opt-out, not opt-i
 
 The first two rows are the subtle part and both are needed. `**/.*` matches a path whose *final* segment starts with a dot, so it excludes `.git` but **not** `.git/config` — on its own it left the entire `.git` directory publicly fetchable, which is how the git history and an unpushed local branch ended up on the live site. `**/.*/**` is what covers files nested inside a dot-directory. Don't drop either one.
 
-A correct deploy reports **73 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
+A correct deploy reports **74 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
 
 ### Use a current CLI — an old one silently publishes an empty site
 
@@ -105,13 +105,14 @@ All scripts live in `js/`. Global scripts, no modules/bundler — load order mat
 
 `js/clear-stored-password.js` sits right after the guard but is `defer`red, unlike it: nothing reads the key it deletes, so it has no ordering dependency and there's no reason to put a second blocking request on the critical path. If the guard redirects, the deferred script never runs — which is fine, because `js/login.js` clears all of storage on arrival anyway.
 3. `js/board-data.js` — defines the `BOARD` global: every fixed coordinate the maze is made of. Must precede `js/gamescene.js`, which reads it.
-4. `js/startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
-5. `js/gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
-6. `js/game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
-7. `js/dashboard.js` — welcome message, logout, and navigation to the leaderboard. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above.
-8. `js/input-debug.js` — arrow-key diagnostics. Also `defer`red in `<head>`, and order-independent: it only defines `window.inputDebug` and reads `gameState` lazily, when one of its functions is called.
+4. `js/touch-input.js` — defines the `TOUCH` global: hold-to-move touch controls. Must precede `js/gamescene.js`, which reads it, and follow `js/board-data.js`, whose `BOARD` it derives the play field from.
+5. `js/startmenu.js` — defines `StartMenu` Phaser scene (title screen, click-to-start)
+6. `js/gamescene.js` — defines `GameScene` Phaser scene (all core gameplay)
+7. `js/game.js` — creates `gameState` and the Phaser `Game` instance with `scene: [StartMenu, GameScene]`
+8. `js/dashboard.js` — welcome message, logout, and navigation to the leaderboard. Declared in `<head>` but `defer`red, so it runs *after* the plain body scripts above.
+9. `js/input-debug.js` — arrow-key diagnostics. Also `defer`red in `<head>`, and order-independent: it only defines `window.inputDebug` and reads `gameState` lazily, when one of its functions is called.
 
-Note that steps 2–6 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script.
+Note that steps 2–7 are plain body `<script>` tags: they execute synchronously during parsing, and therefore before any deferred `<head>` script.
 
 `login.html` and `leaderboard.html` have no such subtlety — each loads a single deferred script (`js/login.js` / `js/leaderboard.js`), with `js/session-guard.js` first and blocking on the latter.
 
@@ -142,6 +143,16 @@ The patterns and the cell list are hand-authored rather than generated, so resiz
 - Two bomb sprites each play a random pattern. When the animation completes, the player's nearest cell being in that pattern's list is game over — score POSTed, sprite disabled, "click to play again". Otherwise another pattern is picked.
 - Rave girls are placed by `drawRaveGirlPosition`, which filters occupied cells out *before* drawing rather than re-rolling. `cellsTouchingPlayer` excludes anything close enough to overlap the player, which is wider than just the player's own cell — bodies intersect within 69px and cells are 74px apart, so mid-corridor both neighbours are too close.
 - Relocation happens at **six** sites: the three collect handlers, and the three `animationcomplete` handlers, which fire every ~4s because the rave girl animations use `repeat: 0` and are replayed.
+
+### Input (`js/touch-input.js`)
+`update()`'s direction list reads exactly two fields off each entry's input object — `isDown` and `timeDown` — so anything shaped like a Phaser `Key` can join it. `TOUCH` exposes four such objects, which is why touch shares the keyboard's dispatch rather than running a second one, and why "most recently engaged wins" arbitrates between finger and keyboard with no extra code.
+
+Load-bearing details:
+- **`timeDown` is stamped only on the transition to down**, mirroring `Key.onDown`'s `if (!this.isDown)` guard. Re-stamping per frame would give touch the newest stamp forever, so a held key could never take over — and it would fail silently. `performance.now()` is used because Phaser stamps Keys with `event.timeStamp`, which shares a time origin with it (verified against a trusted event).
+- **`input.pointer1`, not `activePointer`.** `pointers[0]` is the mouse and Phaser's touch handling loops from index 1, so reading `pointer1` makes this touch-only with desktop untouched. `inputActivePointers` defaults to 1 and is bumped to 2 for touch, so exactly one touch pointer exists and a second finger is ignored for free.
+- **The dead zone means the player stops on *arrival*,** not only on release, so one touch is a "go here and stop" gesture. That is intended, and it is the behaviour most likely to be mistaken for a bug.
+- `css/game.css` sets `touch-action: none` on the canvas only — the phone column may still need to scroll, so this must not move to `body`.
+- The two feel tunables (`DEAD_ZONE`, `HYSTERESIS`) sit together at the top of the file.
 
 ### Assets
 Sprites are authored in Aseprite (`sprite_sheets/*.aseprite files/`) and exported as PNG spritesheets (`sprite_sheets/png_sheets/`) loaded by `js/gamescene.js`/`js/startmenu.js` via `this.load.spritesheet(...)`.

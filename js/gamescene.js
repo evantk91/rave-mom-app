@@ -30,6 +30,11 @@ class GameScene extends Phaser.Scene {
 
         gameState.cursors = this.input.keyboard.createCursorKeys();
 
+        // create() runs again on every restart, but TOUCH's state is module
+        // level and would otherwise survive it — a direction latched by a
+        // finger held through the restarting tap would still be in effect.
+        TOUCH.reset();
+
         gameState.player = this.physics.add.sprite(37, 37, 'player', 0);
         gameState.player.enable = true;
         gameState.heart = this.physics.add.sprite(111, 111, 'heart', 0);
@@ -433,6 +438,16 @@ class GameScene extends Phaser.Scene {
     }
     
     update() {
+        // Outside the enable guard on purpose: a finger lifted during a game
+        // over still has to clear the touch state, or the direction it left
+        // behind would be waiting when the next game starts.
+        //
+        // pointer1 rather than activePointer, because pointers[0] is the mouse
+        // and Phaser's touch handling starts its loop at index 1. Reading
+        // pointer1 is what makes this touch-only, with desktop untouched — no
+        // filtering needed. It simply never goes down without a touch device.
+        TOUCH.update(this.input.pointer1, gameState.player);
+
         if(gameState.player.enable) {
             // Clear both axes before dispatching, so exactly one direction is
             // ever in effect. Each branch below sets a single axis and used to
@@ -466,11 +481,20 @@ class GameScene extends Phaser.Scene {
             // priority order, which made the controls asymmetric. Under the old
             // `down > up > right > left`, pressing up while holding right took
             // over, but pressing right while holding up did nothing at all.
+            // Touch entries sit in the same list rather than in a branch of
+            // their own. Every entry is read only for isDown and timeDown, so a
+            // touch source shaped like a Key needs nothing else — and the
+            // most-recent-stamp rule below then arbitrates between finger and
+            // keyboard using the machinery it already had for two keys.
             const directions = [
                 { key: gameState.cursors.up,    vx: 0,    vy: -192, anim: 'walk-up' },
                 { key: gameState.cursors.down,  vx: 0,    vy: 192,  anim: 'walk-down' },
                 { key: gameState.cursors.left,  vx: -192, vy: 0,    anim: 'walk-left' },
-                { key: gameState.cursors.right, vx: 192,  vy: 0,    anim: 'walk-right' }
+                { key: gameState.cursors.right, vx: 192,  vy: 0,    anim: 'walk-right' },
+                { key: TOUCH.up,                vx: 0,    vy: -192, anim: 'walk-up' },
+                { key: TOUCH.down,              vx: 0,    vy: 192,  anim: 'walk-down' },
+                { key: TOUCH.left,              vx: -192, vy: 0,    anim: 'walk-left' },
+                { key: TOUCH.right,             vx: 192,  vy: 0,    anim: 'walk-right' }
             ];
 
             const held = directions.filter(direction => direction.key.isDown);
