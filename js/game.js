@@ -9,9 +9,9 @@ const gameState = {
 // (The CSS backstops this: #canvas-container's max-width caps the parent at the
 // bitmap's own width, so FIT can't exceed 1x even if `max` misbehaves.)
 //
-// This scales the *presentation* only. Every gameplay coordinate — the 7x7 grid,
-// gameState.playerGridPositions, the explosion arrays, gameState.raveGirlLocations,
-// the movement bounds in gamescene.js — stays in the 518x632 space.
+// This scales the *presentation* only. Every gameplay coordinate — everything
+// in BOARD (js/board-data.js) and the movement bounds in gamescene.js — stays
+// in the 518x632 space.
 const config = {
     type: Phaser.AUTO,
     scale: {

@@ -65,7 +65,7 @@ class GameScene extends Phaser.Scene {
         // return a cell that's already occupied. 40 cells against at most five
         // exclusions, so the pool is never empty.
         function drawRaveGirlPosition(taken) {
-            const free = BOARD.raveGirlLocations.filter(cell =>
+            const free = BOARD.cells.filter(cell =>
                 !taken.some(other => other[0] === cell[0] && other[1] === cell[1]));
             return free[Math.floor(Math.random() * free.length)];
         }
@@ -85,7 +85,7 @@ class GameScene extends Phaser.Scene {
         // three of the 40 cells.
         function cellsTouchingPlayer() {
             const touching = (a, b) => Math.abs(a - b) < (64 + 74) / 2;
-            return BOARD.raveGirlLocations.filter(cell =>
+            return BOARD.cells.filter(cell =>
                 touching(cell[0], gameState.player.x) && touching(cell[1], gameState.player.y));
         }
         
@@ -412,10 +412,10 @@ class GameScene extends Phaser.Scene {
         // midway between two cells reports one of them steadily instead of
         // alternating frame to frame.
         function getPlayerGridPosition(player) {
-            return BOARD.gridCells.reduce((nearest, cell) => {
+            return BOARD.cells.reduce((nearest, cell) => {
                 const distance = (cell[0] - player.x) ** 2 + (cell[1] - player.y) ** 2;
                 return distance < nearest.distance ? { cell: cell, distance: distance } : nearest;
-            }, { cell: BOARD.gridCells[0], distance: Infinity }).cell;
+            }, { cell: BOARD.cells[0], distance: Infinity }).cell;
         }
         
         // The Leaderboard and Log Out buttons live in the dashboard markup, but

@@ -5,8 +5,8 @@
 // The board is a 4x4 maze rather than a full 7x7 grid: 16 intersections at
 // x,y in {37, 185, 333, 481}, joined by corridors whose midpoints fall on
 // {111, 259, 407}. A cell is legal when at least one of its coordinates is an
-// intersection line, which is why raveGirlLocations has 40 entries and not 49
-// — the 9 it omits are exactly blockLocations.
+// intersection line, which is why there are 40 cells and not 49 — the 9 the
+// list omits are exactly blockLocations.
 //
 // Loaded before gamescene.js in index.html. These arrays are only ever read,
 // never mutated, so one shared copy across scene restarts is safe.
@@ -18,8 +18,15 @@ const BOARD = {
         [407, 111], [407, 259], [407, 407],
     ],
 
-    // The 40 legal cells, flat. Also the pool rave girls are drawn from.
-    raveGirlLocations: [
+    // Every legal cell, in one flat list. Both consumers want it flat: the
+    // nearest-cell search scans all 40, and rave girls are drawn from all 40.
+    //
+    // This used to be three structures — a flat list, the same cells keyed by
+    // row, and a third derived by flattening the rows again. The row map was
+    // only ever read to produce that third one, and the third was provably
+    // identical to the first, order included. Nothing asks which row the player
+    // is in; the code that did was deleted in #55.
+    cells: [
         [37, 37], [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [481, 37],
         [37, 111], [185, 111], [333, 111], [481, 111],
         [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185],
@@ -28,32 +35,6 @@ const BOARD = {
         [37, 407], [185, 407], [333, 407], [481, 407],
         [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
     ],
-
-    // The same 40 cells keyed by row. Odd rows hold 7, even rows 4 — the even
-    // rows are the corridors that pass between blocks.
-    playerGridPositions: {
-        row1: [
-            [37, 37], [111, 37], [185, 37], [259, 37], [333, 37], [407, 37], [481, 37]
-        ],
-        row2: [
-            [37, 111], [185, 111], [333, 111], [481, 111]
-        ],
-        row3: [
-            [37, 185], [111, 185], [185, 185], [259, 185], [333, 185], [407, 185], [481, 185]
-        ],
-        row4: [
-            [37, 259], [185, 259], [333, 259], [481, 259]
-        ],
-        row5: [
-            [37, 333], [111, 333], [185, 333], [259, 333], [333, 333], [407, 333], [481, 333]
-        ],
-        row6: [
-            [37, 407], [185, 407], [333, 407], [481, 407]
-        ],
-        row7: [
-            [37, 481], [111, 481], [185, 481], [259, 481], [333, 481], [407, 481], [481, 481]
-        ]
-    },
 
     // 40 hand-authored blast patterns, one per bomb sprite. Each is the list
     // of cells that animation makes deadly.
@@ -180,7 +161,3 @@ const BOARD = {
         ]
     }
 };
-
-// Derived, not typed out again, so it can't drift from the rows above. Assigned
-// after the literal because an object can't reference itself while being built.
-BOARD.gridCells = Object.values(BOARD.playerGridPositions).flat();

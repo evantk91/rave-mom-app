@@ -130,10 +130,10 @@ Every fixed coordinate lives in the `BOARD` global, separate from `gameState` be
 **The board is a 4x4 maze, not a 7x7 grid** — a natural mistake to make from the row names. There are 16 intersections at x,y in `{37, 185, 333, 481}`, joined by corridors whose midpoints are `{111, 259, 407}`. A cell is legal when at least one coordinate is on an intersection line, giving **40 cells** of the 49 a full grid would have. The missing 9 — both coordinates a midpoint — are exactly `BOARD.blockLocations`.
 
 - `blockLocations` — the 9 wall squares.
-- `raveGirlLocations` — the 40 legal cells, flat; also the pool rave girls are drawn from.
-- `playerGridPositions` — the same 40 keyed by row. Odd rows hold 7, even rows 4.
-- `gridCells` — derived by flattening `playerGridPositions`, so it can't drift. Provably equal to `raveGirlLocations`; the two could be unified.
+- `cells` — every legal cell, in one flat list. Both consumers want it flat: the nearest-cell search scans all 40, and rave girls are drawn from all 40.
 - `explosionPositions` — 40 hand-authored blast patterns, `bomb1`...`bomb40`.
+
+There used to be three encodings of those 40 cells — a flat list, the same cells keyed by row, and a third derived by flattening the rows. Nothing ever asked which *row* the player was in; the row map existed only to produce the third list, which was provably identical to the first. **Don't reintroduce a row structure** unless something genuinely needs rows.
 
 The patterns and the cell list are hand-authored rather than generated, so resizing the maze means updating several structures consistently.
 
