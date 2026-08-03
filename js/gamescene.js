@@ -208,35 +208,36 @@ class GameScene extends Phaser.Scene {
         gameState.bomb1 = this.physics.add.sprite(256, 256, 'bomb1', 0);
         gameState.bomb2 = this.physics.add.sprite(256, 256, 'bomb2', 0);
 
-        let ravegirl1_x = setInitialRaveGirlPosition()[0]
-        let ravegirl1_y = setInitialRaveGirlPosition()[1]
+        // Each rave girl takes a cell nothing else is on. The caller lists what
+        // to avoid — the player, plus everyone already placed.
+        //
+        // This replaces three attempts at that idea, each with its own hole.
+        // `setInitialRaveGirlPosition()[0]` and `[1]` were two *independent*
+        // calls, so a rave girl took her x from one draw and her y from an
+        // unrelated one; the mixed pair often wasn't a legal cell at all, which
+        // is how rave girls ended up standing inside the blocks. The check
+        // meant to keep them off the player compared a number against the
+        // [x, y] array the function returns, so it was never true. And rave
+        // girl 2 re-rolled at most once, so she could still land on rave girl 1.
+        const playerCell = getPlayerGridPosition(gameState.player);
+
+        const [ravegirl1_x, ravegirl1_y] = drawRaveGirlPosition([playerCell]);
         gameState.ravegirl1 = this.physics.add.sprite(ravegirl1_x, ravegirl1_y, 'ravegirl1', 0)
 
-        let ravegirl2_x = setInitialRaveGirlPosition()[0]
-        let ravegirl2_y = setInitialRaveGirlPosition()[1]
-        if(ravegirl2_x === gameState.ravegirl1.x && ravegirl2_y === gameState.ravegirl1.y) {
-            ravegirl2_x = setInitialRaveGirlPosition()[0]
-            ravegirl2_y = setInitialRaveGirlPosition()[1]
-        }
+        const [ravegirl2_x, ravegirl2_y] = drawRaveGirlPosition([playerCell, [ravegirl1_x, ravegirl1_y]]);
         gameState.ravegirl2 = this.physics.add.sprite(ravegirl2_x, ravegirl2_y, 'ravegirl2', 0)
 
-        let ravegirl3_x = setInitialRaveGirlPosition()[0]
-        let ravegirl3_y = setInitialRaveGirlPosition()[1]
-        while((ravegirl3_x === gameState.ravegirl1.x && ravegirl3_y === gameState.ravegirl1.y) ||
-        (ravegirl3_x === gameState.ravegirl2.x && ravegirl3_y === gameState.ravegirl2.y)) {
-            ravegirl3_x = setInitialRaveGirlPosition()[0]
-            ravegirl3_y = setInitialRaveGirlPosition()[1]
-        }
+        const [ravegirl3_x, ravegirl3_y] = drawRaveGirlPosition([playerCell, [ravegirl1_x, ravegirl1_y], [ravegirl2_x, ravegirl2_y]]);
         gameState.ravegirl3 = this.physics.add.sprite(ravegirl3_x, ravegirl3_y, 'ravegirl3', 0)
 
-        function setInitialRaveGirlPosition() {
-            let randIdx = Math.floor(Math.random() * 40);
-            let [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx];
-            if(ravegirlstartX === getPlayerGridPosition(gameState.player) && ravegirlstartY === getPlayerGridPosition(gameState.player)) {
-                randIdx = Math.floor(Math.random() * 40);
-                [ravegirlstartX, ravegirlstartY] = gameState.raveGirlLocations[randIdx];
-            }
-            return [ravegirlstartX, ravegirlstartY]
+        // Drops the taken cells before drawing rather than re-rolling until it
+        // gets lucky, so there's no retry that can run long and no way to
+        // return a cell that's already occupied. 40 cells against at most four
+        // exclusions, so the pool is never empty.
+        function drawRaveGirlPosition(taken) {
+            const free = gameState.raveGirlLocations.filter(cell =>
+                !taken.some(other => other[0] === cell[0] && other[1] === cell[1]));
+            return free[Math.floor(Math.random() * free.length)];
         }
         
         const blocks = this.physics.add.staticGroup();
