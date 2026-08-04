@@ -108,6 +108,25 @@ Two things to leave alone:
 
 Both forms show a failure message (`#login-error`, `#signup-error`). Before this existed a wrong password did nothing observable at all: the response has no token, `localStorage` coerced `undefined` to the string `"undefined"`, and the redirect guard declined to navigate without saying why. The `"undefined"` check in `js/session-guard.js` stays as a defence against storage written by those older builds, but nothing writes that value now.
 
+### Login page pending state
+The backend is on Render's free tier and spins down when idle, so the first request after that can take 20+ seconds. Two things address it, both in the login page's own files.
+
+`js/login.js` fires a **prewarm** on load: a tokenless GET to `API.scores` whose response is thrown away. The 401 it answers with is the expected result — what matters is only that a request reached Render, which is what starts the spin-up, and a 404 or even a CORS rejection would do just as well. `js/leaderboard.js` fetches the same URL *with* a token as a real scores request, so don't mistake one for the other, and don't remove the `.catch` — without it every page load can log an unhandled rejection for a failure that means nothing.
+
+While a request is in flight, the submit button and the switch prompt both collapse and an indeterminate progress bar takes their place — all driven by a `pending` class on the form. Load-bearing details:
+- **`display: none`, not `visibility`.** The form deliberately gets shorter and the card shrinks around it. This is the opposite choice from `css/game.css`, which uses `visibility` on its game-over buttons *to avoid* exactly that shift — the two want different things, so don't "fix" one to match the other.
+- **The bar carries its own `margin-top`** rather than living in a spacer element, so `[hidden]` removes the margin along with it and the form closes up completely when idle.
+- **The collapse is on the same `pending` class as the bar**, so the swap happens in one step. Tying it to the click instead would collapse the controls for `SHOW_DELAY_MS` before anything replaced them, and would flicker on a fast response that never shows a bar at all.
+- **Collapsing drops focus.** The player has usually just pressed Enter from the password field or clicked the button itself, so `js/login.js` moves focus to the indicator, which is `tabindex="-1"` and carries the `progressbar` role. Don't remove that `tabindex`.
+- **A hidden submit button does not stop a form submitting.** Enter in a text field still fires it, so the duplicate guard is the `active` check in the submit handler, and it engages the moment the request is sent rather than after the show delay — blocking a fast double-press during the window where nothing has visibly changed.
+- **Hiding the switch prompt means no form-swapping mid-request.** The two controllers are still fully independent, so simultaneous login and signup requests behave correctly — but the UI can no longer produce that state. Keep the independence anyway; it costs nothing and the alternative is shared mutable state between the forms.
+- **Every timer must be cleared on the way out.** There are two per form — the show delay and the ten-second waking threshold — and a survivor paints a bar or a "still waking" line onto a form with nothing in flight, the threshold one doing it ten seconds after the fact. `stop()` clears both unconditionally and is safe to call when idle, which is what lets `pageshow` call it on every page view.
+- **`pageshow` is the back-button fix.** A bfcache restore brings the DOM back exactly as it left, so without it a successful login followed by Back lands on a form with no button and a bar still running. Nothing at the top level of `js/login.js` re-runs on that restore — which is also why `localStorage.clear()` doesn't fire.
+
+There is deliberately **no request timeout**: on a backend that legitimately takes 50+ seconds to wake, one risks reporting failure on a login that was about to succeed. A hung request pends indefinitely and the waking message is what keeps that legible.
+
+The two timing values sit together at the top of `js/login.js`.
+
 `css/login.css` carries a `-webkit-autofill` override. Chrome's autofill background beats an ordinary `background-color`, and a saved credential is the most likely way these fields are ever seen — but autofill styling doesn't engage on typed input, so **testing by typing will not catch a regression here**.
 
 ### Stylesheets

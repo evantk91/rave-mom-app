@@ -44,8 +44,28 @@
                         </button>
                     </div>
 
+                    <!-- Takes no space at all until a request starts, at which
+                         point the submit button and the switch prompt below
+                         collapse and this takes their place.
+
+                         `role="progressbar"` with no `aria-valuenow` is what
+                         marks it indeterminate; there is no percentage to report
+                         because nothing here can tell a warm instance from a
+                         cold one. `tabindex="-1"` makes it a focus target for
+                         the script only: the button is hidden while the bar is
+                         up, which drops focus, so it has to land somewhere and
+                         this is the element that describes the state. -->
+                    <div class="progress" id="login-progress" role="progressbar" tabindex="-1" aria-label="logging in" hidden>
+                        <div class="progress-bar"></div>
+                    </div>
                     <input type="submit" value="Login" id="user-login-submit" class="form-field">
-                    <p id="login-error" class="form-message" role="alert"></p>
+                    <!-- Both messages share one reserved line: the alert is
+                         cleared on submit and only refills once the request has
+                         settled, by which time the status is gone. -->
+                    <div class="form-message-slot">
+                        <p id="login-error" class="form-message" role="alert"></p>
+                        <p id="login-status" class="form-message form-status" role="status"></p>
+                    </div>
                     <p class="form-switch">Don't have an account?
                         <button type="button" class="form-switch-button" id="show-signup">Sign up</button>
                     </p>
@@ -64,8 +84,14 @@
                         </button>
                     </div>
 
+                    <div class="progress" id="signup-progress" role="progressbar" tabindex="-1" aria-label="signing up" hidden>
+                        <div class="progress-bar"></div>
+                    </div>
                     <input type="submit" value="Sign Up" id="new-user-signup-submit" class="form-field">
-                    <p id="signup-error" class="form-message" role="alert"></p>
+                    <div class="form-message-slot">
+                        <p id="signup-error" class="form-message" role="alert"></p>
+                        <p id="signup-status" class="form-message form-status" role="status"></p>
+                    </div>
                     <p class="form-switch">Already have an account?
                         <button type="button" class="form-switch-button" id="show-login">Log in</button>
                     </p>
