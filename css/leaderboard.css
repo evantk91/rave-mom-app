@@ -19,10 +19,15 @@
 }
 
 /* Sized by .panel in shared.css, which caps it at the canvas's width and lets
-   it shrink below that on narrow viewports. */
+   it shrink below that on narrow viewports. The width cap is widened here and
+   the height left alone: the other panels are sized to the canvas so the game
+   isn't scaled, but this page has no canvas in it, and a wider box is what
+   keeps `username score` on one line. `width: 100%` still comes from .panel,
+   so narrow viewports shrink below this as before. */
 #leaderboard-container {
     display: flex;
     flex-direction: column;
+    max-width: 760px;
     padding-bottom: 20px;
 }
 
@@ -54,7 +59,18 @@
 #leaderboard li{
     color: white;
     font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
     overflow-wrap: break-word;
+}
+
+/* js/leaderboard.js wraps each entry in an `h1`, which brings a 2em font size
+   and 0.67em top and bottom margins with it. Both are sized off the `li`, so
+   the sizes here are what the font-size above is really setting: the rendered
+   entry is 28px, and the row spacing is set here rather than left to margins
+   that grow with it. A full top ten used to be 749px of content in a 463px
+   list; this is 400px, so it fits without scrolling. */
+#leaderboard li h1 {
+    margin: 0 0 12px 0;
 }
 
 #return-to-game {
