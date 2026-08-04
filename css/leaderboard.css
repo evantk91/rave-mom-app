@@ -54,23 +54,49 @@
     padding-left: 0;
 }
 
-/* Press Start 2P is wide and usernames are arbitrary, so a long entry would
-   otherwise push the panel sideways and scroll the whole page horizontally. */
-#leaderboard li{
+/* Two columns, from the two spans js/leaderboard.js builds: the name runs from
+   the left edge and the score is pushed to the right one, so the scores line up
+   down the panel however long the names are.
+
+   The size is set here rather than inherited: entries used to be wrapped in an
+   `h1`, which supplied 2em and 0.67em margins of its own. Both are gone, so
+   this is the rendered size, and the row spacing is a fixed value instead of
+   margins that grow with it. A full top ten used to be 749px of content in a
+   463px list and scrolled; ten rows now measure 400px. */
+#leaderboard li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
     color: white;
     font-family: 'Press Start 2P', cursive;
-    font-size: 14px;
-    overflow-wrap: break-word;
+    font-size: 28px;
 }
 
-/* js/leaderboard.js wraps each entry in an `h1`, which brings a 2em font size
-   and 0.67em top and bottom margins with it. Both are sized off the `li`, so
-   the sizes here are what the font-size above is really setting: the rendered
-   entry is 28px, and the row spacing is set here rather than left to margins
-   that grow with it. A full top ten used to be 749px of content in a 463px
-   list; this is 400px, so it fits without scrolling. */
-#leaderboard li h1 {
-    margin: 0 0 12px 0;
+/* Press Start 2P is wide and usernames are arbitrary, so a long name would
+   otherwise push the panel sideways and scroll the whole page horizontally.
+   It truncates instead: every row stays one line tall, which is what keeps a
+   full top ten inside the panel no matter who is on it.
+
+   All four declarations are load-bearing and `text-overflow` alone does
+   nothing without the other three. `white-space: nowrap` is what creates the
+   overflow to trim — a name allowed to wrap never overflows in the first
+   place. `overflow: hidden` is what `text-overflow` describes; visible
+   overflow just spills. And `min-width: 0` is what allows the box to be
+   narrower than the text at all: a flex item defaults to `min-width: auto` and
+   refuses to shrink below its content, so without it the name would push the
+   score off the right edge and never reach the ellipsis. */
+.score-username {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Never the column that gives: a wrapped score would break across lines mid
+   number, and it has far more right to the space than a 30-character name. */
+.score-points {
+    flex: none;
 }
 
 #return-to-game {
@@ -85,6 +111,7 @@
     }
 
     #leaderboard li {
-        font-size: 10px;
+        gap: 8px;
+        font-size: 20px;
     }
 }
