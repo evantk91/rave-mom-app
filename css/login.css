@@ -33,7 +33,6 @@
     border-color: greenyellow;
     border-radius: 16px;
     list-style: none;
-    box-shadow: 10px 5px 5px white;
 }
 
 .nav-bar-member {
@@ -56,16 +55,196 @@ h2 {
     overflow-wrap: break-word;
 }
 
-.form-title {
+/* One form shows at a time. The absence of a class on <body> is the login view,
+   which is what makes the default a property of the markup and this stylesheet
+   rather than of js/login.js having run — so a failure to load that script
+   leaves the login form on screen rather than a card with both forms hidden and
+   no way to reveal either. Same handoff as the `game-over` class between
+   js/gamescene.js and css/game.css.
+
+   `display` rather than the `visibility` used in css/game.css: the hidden form's
+   fields have to leave the tab order, and unlike the game's buttons there is
+   nothing here whose layout depends on their space being reserved. */
+#new-user-signup {
+    display: none;
+}
+
+body.signup-view #user-login {
+    display: none;
+}
+
+body.signup-view #new-user-signup {
+    display: flex;
+}
+
+.field-label {
+    margin: 12px 0 6px;
     color: white;
     font-family: 'Press Start 2P', cursive;
+    font-size: 11px;
     overflow-wrap: break-word;
 }
 
-#sign-up-message {
+/* Scoped by input type rather than written onto `.form-field`, which the two
+   submit buttons also carry — restyling the class wholesale turns Login and
+   Sign Up into gray buttons. */
+/* The border is 2px in both states and only its *colour* changes on focus. It
+   can't widen on focus instead: `box-sizing: border-box` only constrains a
+   size that was specified, and these fields have `width: 100%` but an auto
+   height — so a 1px-to-2px border grows them 2px taller and nudges everything
+   below by one. */
+input[type="text"].form-field,
+input[type="password"].form-field {
+    border: 2px solid #5a5a5a;
+    background-color: #3d3d3d;
+    color: white;
+}
+
+/* `:focus`, not `:focus-visible`: the highlight has to appear for a tap as much
+   as for a Tab. Dropping the outline is only acceptable because the neon border
+   replaces it — never leave the field with no focus indicator at all.
+
+   Only `border-color` — see the note on the rule above for why the width has to
+   stay put. This keeps the highlight inside the field's own footprint rather
+   than as a ring drawn outside it, so nothing moves when a field takes focus. */
+input[type="text"].form-field:focus,
+input[type="password"].form-field:focus {
+    outline: none;
+    border-color: greenyellow;
+}
+
+/* Chrome paints its own background on an autofilled field and it beats
+   `background-color`, so a returning player whose browser fills the form for
+   them sees Chrome's tint and near-black text instead of the styling above —
+   the single most likely way these fields are ever seen. The inset shadow is
+   what covers it and `-webkit-text-fill-color` what recolours the text.
+
+   Test this with a *saved* credential. Autofill styling doesn't engage on typed
+   input, so it passes an otherwise thorough manual check. */
+input[type="text"].form-field:-webkit-autofill,
+input[type="password"].form-field:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #3d3d3d inset;
+    -webkit-text-fill-color: white;
+    caret-color: white;
+}
+
+/* The focused state is a border now rather than a box-shadow, so the autofill
+   rule above no longer competes with it and needs nothing restated here. */
+
+/* Separates the submit from the last field. Without it the button butts against
+   the password field and reads as a third input rather than the action that
+   ends the form. Scoped by input type like the rules above, so it can't add a
+   gap between the text fields. */
+input[type="submit"].form-field {
+    margin-top: 20px;
+}
+
+.password-wrap {
+    position: relative;
+    background-color: transparent;
+}
+
+/* Room for the toggle, so a long password never runs under the icon. */
+.password-wrap .form-field {
+    padding-right: 48px;
+}
+
+/* Full field height and 44px wide: the icon is small but the target it sits in
+   is not. */
+.password-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+/* `:focus-visible`, unlike the fields above, which deliberately use `:focus`.
+   Clicking a button focuses it, so with plain `:focus` a green box stayed around
+   the icon after every reveal — sitting just inside the field's right edge, it
+   read as a leftover fragment of the field's own highlight. `:focus-visible`
+   doesn't match a mouse or touch press, so the ring is now only what it was
+   meant to be: the keyboard user's marker for where they are. */
+.password-toggle:focus-visible {
+    outline: 2px solid greenyellow;
+    outline-offset: -2px;
+}
+
+/* The source PNGs are 512x512 black line art, so they need sizing down and
+   inverting to read white against the gray field. The filter is on the <img>
+   alone — applied to the button it would invert the focus outline too. */
+.password-toggle img {
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-color: transparent;
+    filter: invert(1);
+}
+
+/* Masked shows the open eye — "tap to show". Revealed shows it crossed.
+
+   These selectors are qualified with `.password-toggle` to outweigh the
+   `display: block` in the `.password-toggle img` rule above. As a bare
+   `.eye-shut` this loses on specificity and both icons draw at once. */
+.password-toggle .eye-shut {
+    display: none;
+}
+
+.password-toggle[aria-pressed="true"] .eye-open {
+    display: none;
+}
+
+.password-toggle[aria-pressed="true"] .eye-shut {
+    display: block;
+}
+
+/* `min-height` reserves the line whether or not there's a message, so text
+   appearing doesn't shove the switch prompt below it downward — under a thumb
+   that may already be moving toward it. */
+.form-message {
+    min-height: 16px;
+    margin: 10px 0 0;
+    color: #ff6b6b;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    line-height: 1.6;
+    text-align: center;
+    overflow-wrap: break-word;
+}
+
+.form-switch {
+    margin: 6px 0 0;
     color: white;
     font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    line-height: 1.8;
+    text-align: center;
     overflow-wrap: break-word;
+}
+
+/* A button, not a link: it has no href and must not navigate. The greenyellow
+   against the prompt's white is what marks it as the interactive half of the
+   sentence — it carries that on its own, so there's no underline. */
+.form-switch-button {
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    color: greenyellow;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+}
+
+.form-switch-button:focus {
+    outline: 2px solid greenyellow;
+    outline-offset: 2px;
 }
 
 /* Type holds its original size until the mobile breakpoint, then steps down
@@ -76,8 +255,12 @@ h2 {
         font-size: 13px;
     }
 
-    .form-title,
-    #sign-up-message {
-        font-size: 11px;
+    .field-label {
+        font-size: 9px;
+    }
+
+    .form-message,
+    .form-switch {
+        font-size: 8px;
     }
 }

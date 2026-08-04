@@ -60,7 +60,7 @@ The public root is `.` — the whole repo — so **hosting is opt-out, not opt-i
 
 The first two rows are the subtle part and both are needed. `**/.*` matches a path whose *final* segment starts with a dot, so it excludes `.git` but **not** `.git/config` — on its own it left the entire `.git` directory publicly fetchable, which is how the git history and an unpushed local branch ended up on the live site. `**/.*/**` is what covers files nested inside a dot-directory. Don't drop either one.
 
-A correct deploy reports **75 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
+A correct deploy reports **77 files**. If that number jumps, something that shouldn't be public probably is; the fastest check is the ignore list above. Update this number whenever a file is deliberately added or removed — it was stale at 70 for a while after `js/clear-stored-password.js` landed, which makes the tripwire useless in both directions.
 
 ### Use a current CLI — an old one silently publishes an empty site
 
@@ -88,14 +88,27 @@ Auth state is kept client-side in `localStorage` (`token`, `user_id`, `username`
 
 **The password is never persisted.** It goes into the login request body and nowhere else — no `localStorage`, `sessionStorage`, or cookie. An earlier version stored it under a `password` key that nothing ever read; it was removed because a leaked password is unrevocable and widely reused, where a leaked token is neither. Don't reintroduce the write, and don't "secure" it by encrypting it client-side — any key the page can use, an attacker on that page can also recover.
 
+The login page's show/hide control does not qualify that. It flips the field's `type` between `password` and `text` and touches nothing else: the value is read from the form at submit time exactly as a masked one is. A `type="text"` field holding a password is a rendering state, not a stored one.
+
 `js/clear-stored-password.js` exists only to clean up users who logged in before that change and would otherwise keep the stale key indefinitely (it's cleared on logout or on a login-page visit, but a user who stays logged in makes neither trip). It's deferred on `index.html` and `leaderboard.html`, removes exactly that one key, and swallows storage exceptions so private-browsing or disabled-site-data can't break the session. **It is temporary** — once the existing user population has cycled through, delete the file and both script tags.
 
 ### Page split & session flow
-- `login.html` — signup and login forms only. A successful login stores the session in `localStorage` and then does a real navigation (`window.location.href`) to `index.html`. Signup deliberately does *not* auto-navigate; it shows an inline message and requires a separate manual login.
+- `login.html` — signup and login forms only, one showing at a time (see below). A successful login stores the session in `localStorage` and then does a real navigation (`window.location.href`) to `index.html`. Signup deliberately does *not* auto-navigate; it switches to the login form and requires a separate manual login.
 - `index.html` — the game only. `js/session-guard.js` redirects back to `login.html` if there's no valid session.
 - `leaderboard.html` — top-ten scores only, with a "Return to Game" button. Also guarded by `js/session-guard.js`. It deliberately does *not* load `js/login.js`, which would clear the session on load.
 
 Navigating to the leaderboard unloads Phaser and discards an in-progress game, so the Leaderboard button is only offered after a game over — see the button visibility handoff below.
+
+### Login page form toggle
+Both forms are in `login.html` at once, but only one shows: `js/login.js` toggles a `signup-view` class on `<body>` and `css/login.css` decides what it means — the same split as `game-over` between `js/gamescene.js` and `css/game.css`. **Login is the absence of that class**, so the default view comes from the markup and the stylesheet rather than from the script having run. If `js/login.js` fails to load you get the login form on screen, rather than a card with both forms hidden and no way to reveal either — the login itself still needs the script, but the failure mode is a form that doesn't submit instead of a page with nothing on it.
+
+Two things to leave alone:
+- **They stay two separate `<form>` elements.** A form only validates its own controls, so the hidden form's `required` and `minlength` can never block the visible form's submit. Merging them into one form is what would create that problem — and the browser can't focus a `display: none` field to report the error, so it presents as a dead button with no message.
+- **`name="username"` and `name="password"` are duplicated across both forms on purpose.** `js/login.js` reads them through `FormData` on the submitted form, which scopes them. The `id`s are what's prefixed per form, because labels and the reveal button's `aria-controls` need to be unique document-wide.
+
+Both forms show a failure message (`#login-error`, `#signup-error`). Before this existed a wrong password did nothing observable at all: the response has no token, `localStorage` coerced `undefined` to the string `"undefined"`, and the redirect guard declined to navigate without saying why. The `"undefined"` check in `js/session-guard.js` stays as a defence against storage written by those older builds, but nothing writes that value now.
+
+`css/login.css` carries a `-webkit-autofill` override. Chrome's autofill background beats an ordinary `background-color`, and a saved credential is the most likely way these fields are ever seen — but autofill styling doesn't engage on typed input, so **testing by typing will not catch a regression here**.
 
 ### Stylesheets
 All stylesheets live in `css/`: one shared plus one per page, and each page loads exactly two. `css/shared.css` holds the Google Fonts `@import` (which must stay the first rule in the file or CSS ignores it), the `*` reset, `body/html`, button and form-field styling, and the `.panel` sizing shared by the dashboard, canvas, and leaderboard. `css/login.css`, `css/game.css`, and `css/leaderboard.css` hold only their own page's rules.

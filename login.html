@@ -16,21 +16,59 @@
             <div class="nav-bar-member">
                 <h2>Welcome to Rave Mom</h2>
             </div>
-            <div class="nav-bar-member">
-                <form id="new-user-signup">
-                    <h3 class="form-title">New User:</h3>
-                    <input type="text" name="username" placeholder="username" class="form-field" required>
-                    <input type="password" name="password" placeholder="password" class="form-field" required minlength="5">
-                    <input type="submit" value="Sign Up" id="new-user-signup-submit" class="form-field">
-                    <h3 id="sign-up-message"></h2>
-                </form>
-            </div>
+            <!-- Both forms live here, but only one shows at a time: css/login.css
+                 hides the signup form until js/login.js puts `signup-view` on
+                 <body>. Login is the default because it's the absence of that
+                 class, so it survives the script failing to load.
+
+                 They stay two separate <form> elements. A form only validates
+                 its own controls, so the hidden one's `required` and `minlength`
+                 can never block the visible one's submit — merging them into a
+                 single form is what would create that problem. -->
             <div class="nav-bar-member">
                 <form id="user-login">
-                    <h3 class="form-title">Current User Login:</h3>
-                    <input type="text" name="username" placeholder="username" class="form-field">
-                    <input type="password" name="password" placeholder="password" class="form-field">
+                    <label class="field-label" for="login-username">username</label>
+                    <input type="text" id="login-username" name="username" class="form-field" autocomplete="username" required>
+
+                    <label class="field-label" for="login-password">password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="login-password" name="password" class="form-field" autocomplete="current-password" required>
+                        <!-- type="button" on all three of these: a bare <button>
+                             inside a form submits it. Both eye icons ship in the
+                             markup and CSS picks one, so the second is already
+                             decoded when it's first needed. alt="" because the
+                             button's aria-label already names it. -->
+                        <button type="button" class="password-toggle" aria-controls="login-password" aria-pressed="false" aria-label="show password">
+                            <img class="eye-open" src="./assets/icons/eye.png" alt="">
+                            <img class="eye-shut" src="./assets/icons/eye-crossed.png" alt="">
+                        </button>
+                    </div>
+
                     <input type="submit" value="Login" id="user-login-submit" class="form-field">
+                    <p id="login-error" class="form-message" role="alert"></p>
+                    <p class="form-switch">Don't have an account?
+                        <button type="button" class="form-switch-button" id="show-signup">Sign up</button>
+                    </p>
+                </form>
+
+                <form id="new-user-signup">
+                    <label class="field-label" for="signup-username">username</label>
+                    <input type="text" id="signup-username" name="username" class="form-field" autocomplete="username" required>
+
+                    <label class="field-label" for="signup-password">password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="signup-password" name="password" class="form-field" autocomplete="new-password" required minlength="5">
+                        <button type="button" class="password-toggle" aria-controls="signup-password" aria-pressed="false" aria-label="show password">
+                            <img class="eye-open" src="./assets/icons/eye.png" alt="">
+                            <img class="eye-shut" src="./assets/icons/eye-crossed.png" alt="">
+                        </button>
+                    </div>
+
+                    <input type="submit" value="Sign Up" id="new-user-signup-submit" class="form-field">
+                    <p id="signup-error" class="form-message" role="alert"></p>
+                    <p class="form-switch">Already have an account?
+                        <button type="button" class="form-switch-button" id="show-login">Log in</button>
+                    </p>
                 </form>
             </div>
         </section>
