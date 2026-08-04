@@ -44,9 +44,29 @@
 }
 
 /* Only the list scrolls, so the title and Return to Game button stay put
-   even when a full top ten overruns the panel height. */
+   even when a full top ten overruns the panel height.
+
+   The list takes the leftover height and centres its rows in it, so a board
+   that isn't full sits in the middle of the panel rather than leaving all the
+   empty space in one block above the button.
+
+   `safe center` is the same guard as #leaderboard-page: plain centring
+   overflows a too-small box in *both* directions, and the top half of the
+   overflow is unreachable because scrolling can't go past the start edge.
+   `safe` falls back to start-alignment exactly when that would happen. The
+   unprefixed `center` before it is the fallback for browsers that don't parse
+   the keyword and would drop the whole declaration.
+
+   Row spacing is `gap` rather than a margin on the rows: a bottom margin on
+   the last row is counted in the centring, which would sit the list half a gap
+   high. */
 #leaderboard {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    justify-content: safe center;
+    gap: 12px;
     overflow-y: auto;
     margin: 0 auto 10px auto;
     width: 80%;
@@ -67,7 +87,6 @@
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 12px;
     color: white;
     font-family: 'Press Start 2P', cursive;
     font-size: 28px;
