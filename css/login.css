@@ -140,12 +140,13 @@ input[type="password"].form-field:-webkit-autofill {
 /* The focused state is a border now rather than a box-shadow, so the autofill
    rule above no longer competes with it and needs nothing restated here. */
 
-/* Separates the submit from the last field. Without it the button butts against
-   the password field and reads as a third input rather than the action that
-   ends the form. Scoped by input type like the rules above, so it can't add a
-   gap between the text fields. */
+/* Separates the submit from what precedes it — the progress strip, which in turn
+   sits below the password field. Without a gap the button butts against them and
+   reads as another input rather than the action that ends the form. Scoped by
+   input type like the rules above, so it can't add a gap between the text
+   fields. */
 input[type="submit"].form-field {
-    margin-top: 20px;
+    margin-top: 8px;
 }
 
 .password-wrap {
@@ -218,18 +219,102 @@ input[type="submit"].form-field {
     display: block;
 }
 
-/* `min-height` reserves the line whether or not there's a message, so text
-   appearing doesn't shove the switch prompt below it downward — under a thumb
+/* Both the submit button and the switch prompt collapse while a request is in
+   flight, so the bar isn't a third thing competing with them — it stands in for
+   the pair.
+
+   `display`, not `visibility`: the form deliberately gets shorter, and the card
+   shrinks around it. That is a layout shift by choice — `visibility` would keep
+   both boxes and leave two empty gaps where the controls were. Note this differs
+   from css/game.css, which uses `visibility` precisely to avoid the shift; the
+   two want opposite things.
+
+   Driven by the same `pending` class as the bar, so the swap happens in one
+   step. Gating it on the click instead would collapse the button for
+   SHOW_DELAY_MS before anything replaced it, and would flicker on a fast
+   response that never shows a bar at all. */
+form.pending input[type="submit"].form-field,
+form.pending .form-switch {
+    display: none;
+}
+
+/* A third the height of the button it replaces: enough to read as a progress
+   bar, not so much that it stands in as one. The 4px radius is deliberately
+   smaller than the 8px used on the fields and buttons — at this height 8px would
+   round the ends into a pill.
+
+   The margin is on the bar rather than a wrapper so it costs nothing when idle:
+   `[hidden]` takes the element out of the flex column entirely, margin included,
+   and the form closes up as though it were never there. */
+.progress {
+    height: 13px;
+    margin-top: 28px;
+    overflow: hidden;
+    border: 2px solid #5a5a5a;
+    border-radius: 4px;
+    background-color: #3d3d3d;
+}
+
+/* `hidden` is an attribute, and the rule above would otherwise beat it. */
+.progress[hidden] {
+    display: none;
+}
+
+.progress:focus-visible {
+    outline: 2px solid greenyellow;
+    outline-offset: -2px;
+}
+
+/* `steps()` rather than a smooth ease. A gradient sweep is the Material house
+   style and would look borrowed here; moving in discrete jumps matches the
+   pixel art and Press Start 2P. */
+.progress-bar {
+    width: 40%;
+    height: 100%;
+    background-color: greenyellow;
+    animation: progress-sweep 1.2s steps(10, end) infinite;
+}
+
+@keyframes progress-sweep {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(250%); }
+}
+
+/* A looping animation is exactly what this setting exists to suppress. The bar
+   still shows — losing it would put these players back where this change
+   started, on a page that looks like it did nothing — but it holds a partial
+   width so it can't be read as a completed bar. js/login.js pairs this with
+   surfacing the waking message immediately rather than at the threshold, so the
+   meaning is carried by text instead of motion. */
+@media (prefers-reduced-motion: reduce) {
+    .progress-bar {
+        animation: none;
+        width: 30%;
+    }
+}
+
+/* `min-height` on the slot rather than the messages, so the alert and the status
+   share one reserved line instead of claiming two. Reserving it at all is what
+   stops text appearing from shoving the switch prompt below down — under a thumb
    that may already be moving toward it. */
-.form-message {
+.form-message-slot {
     min-height: 16px;
     margin: 10px 0 0;
+}
+
+.form-message {
+    margin: 0;
     color: #ff6b6b;
     font-family: 'Press Start 2P', cursive;
     font-size: 10px;
     line-height: 1.6;
     text-align: center;
     overflow-wrap: break-word;
+}
+
+/* White, not the failure red: the server being slow is not an error. */
+.form-status {
+    color: white;
 }
 
 .form-switch {
@@ -275,5 +360,12 @@ input[type="submit"].form-field {
     .form-message,
     .form-switch {
         font-size: 8px;
+    }
+
+    /* The waking message is the longest string on the card and wraps to two
+       lines here, so the slot has to allow for both or the switch prompt jumps
+       when it appears. */
+    .form-message-slot {
+        min-height: 26px;
     }
 }

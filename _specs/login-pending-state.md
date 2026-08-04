@@ -124,12 +124,18 @@ which is the exact moment the player most needs to see it. (A fixed-duration
 
 ### While pending
 
-- The view toggle ("Don't have an account? Sign up") stays usable. A player who
-  gets bored waiting is allowed to go look at the other form.
-- Consequently the response can arrive while its form is hidden. Whatever it does
-  — release the button, show a message, switch views — must not yank the player
-  out of the form they're now looking at, and must leave both forms in a
-  coherent state.
+- **Superseded during implementation.** This section originally required the view
+  toggle to stay usable while a request was in flight, so a player who got bored
+  could go look at the other form. It ships hidden instead: the switch prompt
+  collapses along with the submit button, and the bar stands in for both.
+- The cost is real and worth stating. A player cannot reach the signup form while
+  a login is waking the server, and since there is no timeout, a hung request
+  leaves them with no route to the other form short of reloading.
+- What this buys is that the messiest cases below stop being reachable through
+  the UI at all — a response landing on a form nobody is looking at, and two
+  requests in flight at once. **The two controllers stay independent regardless**,
+  because that costs nothing and the alternative is shared state between the
+  forms.
 - The password reveal stays usable; it's a rendering toggle with no bearing on
   the request.
 - The fields themselves may stay editable. Nothing depends on them after the
@@ -240,10 +246,10 @@ which is the exact moment the player most needs to see it. (A fixed-duration
 - **Two requests in flight across the two forms.** Submit login, toggle to
   signup, submit signup — both are pending at once. Neither may release or
   message the other's form.
-- **The waking message can appear on a hidden form.** The player submits, waits,
-  toggles to the other form, and ten seconds later the message lands on a form
-  nobody is looking at — while the form they *are* looking at says nothing about
-  the request still running.
+- **The waking message landing on a hidden form** — the player submits, toggles
+  away, and ten seconds later the message appears where nobody is looking. **No
+  longer reachable through the UI** now that the switch prompt collapses while
+  pending, but it would come straight back if the toggle were ever restored.
 - **Double submit in the same tick.** Two Enter presses in quick succession, or a
   double-click, can both dispatch before a disable applied inside the handler
   takes effect. The guard needs to hold for the very first repeat, not just the

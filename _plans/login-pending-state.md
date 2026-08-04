@@ -1,8 +1,13 @@
 # Plan: Login pending state
 
-Implements `_specs/login-pending-state.md`. **Written before implementation** —
-nothing here has been built or verified yet. Correct it in place once it ships,
-the way `_plans/touch-controls.md` was.
+Implements `_specs/login-pending-state.md`. **Built and verified**, and corrected
+in place afterwards — so this reflects what shipped, including the one thing the
+plan designed itself into a corner on.
+
+The plan held up on the parts it called risky: the timer discipline, the
+`pageshow` fix, and the guard living in the submit handler were all right, and
+the bfcache case behaved exactly as predicted. What it got wrong was the
+indicator's *shape* — see "What changed during review" at the end.
 
 ## Context
 
@@ -218,9 +223,49 @@ schedule.
 - Screen reader → progress announced without a percentage; the waking message
   announced politely, not as an alert.
 - 390px (DevTools device mode — Chrome won't resize a window below 500px):
-  nothing shifts when the button is swapped, and the message wording fits.
+  nothing shifts when the bar appears, and the message wording fits.
 
 **Deploy.** `firebase --version` current first — an old CLI reports
 `found 0 files` and publishes an empty site behind a green tick. Output must
 still read **77 files**, `/login.html` 200, and `/CLAUDE.md`, `/.git/config`,
 `/_specs/…`, `/_plans/…` all 404.
+
+## What changed during review
+
+**The indicator does not cover the button.** The plan had it absolutely
+positioned over the submit button's box, with the button hidden by
+`visibility: hidden` — chosen because that preserves the box, so the slot needed
+no hardcoded height. It worked exactly as designed and looked wrong: a bar the
+full height of a button reads as a button, and it competed with the real one for
+attention.
+
+What shipped is a 13px bar — a third the button's height — that takes no space at
+all until a request starts, at which point **both the submit button and the switch
+prompt collapse** and the bar appears in their place. The card gets shorter.
+
+- **The height reservation went away entirely.** The plan's whole layout argument
+  was about not shifting; the shipped design shifts on purpose. Once the controls
+  collapse there is nothing to protect, so `display: none` replaced
+  `visibility: hidden` and the spacer element was deleted. The bar carries its own
+  `margin-top` instead, so `[hidden]` takes the margin with it.
+- **This is the opposite choice from `css/game.css`**, which uses `visibility`
+  specifically to avoid a shift. Both are right for their own page; neither should
+  be "fixed" to match the other.
+- **The collapse is driven by the same `pending` class as the bar.** Doing it on
+  the click instead would empty the form for `SHOW_DELAY_MS` before anything
+  replaced it, and would flicker on a fast response that shows no bar at all.
+- **Hiding the switch prompt narrowed the spec.** The spec had required the toggle
+  to stay usable mid-request; it doesn't. That makes two of its nastiest edge
+  cases unreachable through the UI — a response landing on a hidden form, and two
+  requests pending at once — but the per-form controllers stay independent anyway,
+  since the alternative is shared state and the isolation is free.
+
+An intermediate version left the button visible and used `aria-disabled` instead.
+That was discarded, but it surfaced something worth keeping in mind: the focus
+move to the indicator is not only a focus rescue. It is also what announces the
+pending state to a screen reader, because a bar appearing is otherwise a purely
+visual event. Remove the hiding and you lose the announcement with it.
+
+The lesson is narrow: the plan optimised the layout mechanics of an overlay
+before anyone had looked at whether an overlay was the right *shape*. The
+mechanics turned out to be reusable; the shape did not survive one screenshot.
