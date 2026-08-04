@@ -88,6 +88,15 @@ body.signup-view #new-user-signup {
 /* Scoped by input type rather than written onto `.form-field`, which the two
    submit buttons also carry — restyling the class wholesale turns Login and
    Sign Up into gray buttons. */
+/* Every control on the card — both text fields and both submit buttons all
+   carry `.form-field` — picks up the same rounding, echoing the card's own 16px
+   at a size proportionate to a ~39px-tall control. Scoped to this stylesheet
+   because `.form-field` is only used by login.html; the buttons on the game and
+   leaderboard pages use `.button` and are deliberately untouched. */
+.form-field {
+    border-radius: 8px;
+}
+
 /* The border is 2px in both states and only its *colour* changes on focus. It
    can't widen on focus instead: `box-sizing: border-box` only constrains a
    size that was specified, and these fields have `width: 100%` but an auto
@@ -162,6 +171,10 @@ input[type="submit"].form-field {
     width: 44px;
     padding: 0;
     border: none;
+    /* Matches the field's right-hand corners. An outline follows its element's
+       border-radius, so without this the keyboard focus ring below would be a
+       square that overhangs the rounded corner it sits in. */
+    border-radius: 0 8px 8px 0;
     background-color: transparent;
     cursor: pointer;
 }
