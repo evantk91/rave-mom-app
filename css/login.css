@@ -140,13 +140,15 @@ input[type="password"].form-field:-webkit-autofill {
 /* The focused state is a border now rather than a box-shadow, so the autofill
    rule above no longer competes with it and needs nothing restated here. */
 
-/* Separates the submit from what precedes it — the progress strip, which in turn
-   sits below the password field. Without a gap the button butts against them and
-   reads as another input rather than the action that ends the form. Scoped by
-   input type like the rules above, so it can't add a gap between the text
-   fields. */
+/* Separates the submit from the password field above it. Without a gap the
+   button butts against it and reads as another input rather than the action that
+   ends the form. Scoped by input type like the rules above, so it can't add a
+   gap between the text fields.
+
+   This is the *idle* spacing only: while a request is in flight the button is
+   `display: none` and the bar's own margin sets the gap instead. */
 input[type="submit"].form-field {
-    margin-top: 8px;
+    margin-top: 24px;
 }
 
 .password-wrap {
