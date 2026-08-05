@@ -245,20 +245,21 @@ canvas {
        layout, and this orientation is for playing.
 
        `display: none` rather than `visibility: hidden`, unlike the buttons
-       below: this needs the height back, not just the ink. */
+       below: this needs the height back, not just the ink.
+
+       It stays hidden after a game over too, which is deliberate and is the one
+       thing here most likely to look like an oversight. Log Out and Leaderboard
+       live in the dashboard, so in landscape there is no way off this page but
+       to turn the phone back — and that was chosen over revealing it: bringing
+       a 638px panel back into a 390px viewport turns the moment you die into a
+       reflow and a scroll, and rotating is the cheaper gesture. Clicking to
+       play again, which is the common thing to do next, needs nothing revealed.
+
+       So there is no `body.game-over` override in this tier. The one below
+       still applies to the buttons, but it can't matter while their container
+       isn't rendered. */
     #dashboard {
         display: none;
-    }
-
-    /* Log Out and Leaderboard live in the dashboard and are the only way off
-       this page, so once the run is over it comes back. The board is finished
-       with by then, and the column can overflow into a scroll to reach it.
-
-       Same handoff as the buttons below — js/gamescene.js sets `game-over` on
-       <body> and this file decides what it means — so nothing in the scripts
-       needs to know this tier exists. */
-    body.game-over #dashboard {
-        display: flex;
     }
 
     /* Sized from the height, the opposite way round from every other tier. The
