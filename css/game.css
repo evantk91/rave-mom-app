@@ -223,6 +223,70 @@ canvas {
     }
 }
 
+/* Landscape on a phone, where height is the scarce axis rather than width:
+   ~390px of it, against a board that is 638px tall at native size.
+
+   Keyed on height and orientation rather than on the 560px width breakpoint,
+   because a phone on its side is *wide* — 844x390 is well over that breakpoint
+   and lands in the stacked tier above, sized as though it had room to spare.
+
+   This tier comes after the phone tier deliberately: a small window can match
+   both, and these rules need to win at equal specificity. */
+@media (orientation: landscape) and (max-height: 560px) {
+    /* Every pixel of height is board, so the 20px default drops to the least
+       that still shows the panel border clear of the screen edge. */
+    #game-container {
+        padding: 6px var(--panel-border);
+    }
+
+    /* The board is the whole page here. Stacked above it the dashboard costs
+       more height than the viewport has in total, and nothing that stacks fits,
+       so it goes — the instructions are readable in portrait and on the desktop
+       layout, and this orientation is for playing.
+
+       `display: none` rather than `visibility: hidden`, unlike the buttons
+       below: this needs the height back, not just the ink. */
+    #dashboard {
+        display: none;
+    }
+
+    /* Log Out and Leaderboard live in the dashboard and are the only way off
+       this page, so once the run is over it comes back. The board is finished
+       with by then, and the column can overflow into a scroll to reach it.
+
+       Same handoff as the buttons below — js/gamescene.js sets `game-over` on
+       <body> and this file decides what it means — so nothing in the scripts
+       needs to know this tier exists. */
+    body.game-over #dashboard {
+        display: flex;
+    }
+
+    /* Sized from the height, the opposite way round from every other tier. The
+       base rule's `width: 100%` would take the full 844px of a landscape phone
+       and derive a 1030px height from the aspect ratio; with a definite height
+       and `width: auto`, the ratio runs the other way and the width follows.
+
+       `min-width: 0` is what allows that. This is a flex item, so its
+       `min-width: auto` resolves to its content — and its content is the canvas
+       Phaser has already drawn at 524px. Without it the width can't go below
+       that, the aspect ratio never gets to derive anything, and the board
+       overflows the viewport at full size while the box around it is the right
+       shape. Nothing about the rule looks wrong when that happens.
+
+       Phaser's FIT mode measures this box and rescales the bitmap into it, so
+       the board stays whole and centred at whatever size the viewport allows,
+       and `max` in js/game.js still stops it upscaling past native. The bitmap
+       stays 518x632, so every gameplay coordinate is untouched.
+
+       18px is the 12px of container padding above plus the 6px the canvas's own
+       border needs, since that border is drawn outside this box. */
+    #canvas-container {
+        width: auto;
+        min-width: 0;
+        height: min(var(--panel-height), 100dvh - 18px);
+    }
+}
+
 /* Both buttons stay hidden through the start menu and active play, and are
    revealed once the knocked-out animation has looped: js/gamescene.js toggles
    `game-over` on <body>. Using visibility rather than display keeps their
