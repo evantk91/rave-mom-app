@@ -166,10 +166,26 @@ class GameScene extends Phaser.Scene {
         gameState.ravegirl2.anims.play('ravegirl2', true)
         gameState.ravegirl3.anims.play('ravegirl3', true)
 
-        let randBomb1 = `bomb${Math.floor(Math.random() * 40) + 1}`;
+        // The two opening bombs skip any pattern covering the cell the player
+        // spawns on. 7 of the 40 patterns include it, so with two independent
+        // draws roughly a third of games used to end before the player had
+        // touched a key — nothing to react to, since the pattern is already
+        // running when create() hands over.
+        //
+        // Only the opening draws are restricted. The redraws after each
+        // explosion stay unrestricted: by then the player has had a full
+        // animation to move, and a bomb that can't cover where you're standing
+        // is a bomb you can ignore.
+        function drawBombAvoiding(cell) {
+            const safe = Object.keys(BOARD.explosionPositions).filter(pattern =>
+                !isArrayInArray(BOARD.explosionPositions[pattern], cell));
+            return safe[Math.floor(Math.random() * safe.length)];
+        }
+
+        let randBomb1 = drawBombAvoiding(getPlayerGridPosition(gameState.player));
         gameState.bomb1.anims.play(randBomb1, true)
 
-        let randBomb2 = `bomb${Math.floor(Math.random() * 40) + 1}`;
+        let randBomb2 = drawBombAvoiding(getPlayerGridPosition(gameState.player));
         gameState.bomb2.anims.play(randBomb2, true)
 
         let playerX; 
