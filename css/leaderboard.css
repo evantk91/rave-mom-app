@@ -136,19 +136,31 @@
     margin-bottom: 20px;
 }
 
-/* Type holds its original size until the mobile breakpoint, then steps down
-   once — matching the game and login pages.
+/* Type steps down once for phones and holds its original size on the desktop.
 
-   The second condition is the same phone in landscape. A phone on its side is
-   *wide* — 844x390 clears the 560px width entirely — so on the width query
-   alone the type sprang back to full size the moment the device was turned,
-   which reads as the leaderboard zooming in. The two conditions are the two
-   orientations of one device, and it should look the same in both.
+   The second condition is what decides that, and it asks about the *input
+   device*, not the viewport: no hover and a coarse pointer is a touchscreen.
+   That is deliberately independent of width, height and orientation, so a phone
+   reads the same size however it's held. Two viewport-based attempts at this
+   both failed on a real device — the width query missed landscape entirely
+   because a phone on its side is wide (844x390), and adding
+   `(orientation: landscape) and (max-height: 560px)` still missed anything
+   whose landscape height clears 560px, which is every tablet. There is no
+   viewport test that means "phone", because a phone's viewport is a desktop
+   window's viewport.
 
-   `(max-height: 560px)` is paired with the orientation so a tall narrow window
-   can't match it, and it's the same test css/game.css uses for its landscape
-   tier — the two files agree on what a phone on its side is. */
-@media (max-width: 560px), (orientation: landscape) and (max-height: 560px) {
+   Both conditions are needed together. A laptop with a touchscreen reports
+   `pointer: fine` and `hover: hover` for its primary input, so the pair keeps
+   it on the desktop sizes; either half alone would catch it.
+
+   The width query stays for a narrow desktop window, which has always stepped
+   down here and on the login page.
+
+   Note this is a *different* test from css/game.css's landscape tier, which is
+   still `(orientation: landscape) and (max-height: 560px)` — and correctly so.
+   That tier fits a board into the space available, which is a question about
+   the viewport. This is about how big text should be on a device you hold. */
+@media (max-width: 560px), (hover: none) and (pointer: coarse) {
     #leaderboard-title {
         font-size: 16px;
     }
