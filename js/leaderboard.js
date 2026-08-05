@@ -24,7 +24,35 @@ function displayScores(response) {
     const scores = Array.isArray(response) ? response : []
     clearLeaderboard(leaderboard)
     topTenScores(scores).map(score => appendScore(score))
+    markTruncatedNames()
 }
+
+// css/leaderboard.css truncates a name too long for its column to an ellipsis.
+// The characters are still in the DOM, just not on screen, so a tooltip is what
+// gets them back — but only for the names that are actually cut off, or every
+// short name would answer a hover with a tooltip repeating itself.
+//
+// `scrollWidth > clientWidth` is that test, and it's only answerable once the
+// row has been laid out, which is why this can't live in appendScore.
+//
+// It's re-run rather than done once because the answer changes: Press Start 2P
+// is wider than the fallback the first paint may use, so the real font clips
+// names the fallback didn't, and the column's width moves with the viewport.
+function markTruncatedNames() {
+    leaderboard.querySelectorAll(".score-username").forEach(name => {
+        if (name.scrollWidth > name.clientWidth) {
+            name.title = name.textContent
+        } else {
+            name.removeAttribute("title")
+        }
+    })
+}
+
+// Both of these can fire before there are any rows to measure — the fetch is
+// slow and the font may already be cached — and both are harmless then: the
+// pass finds nothing, and the one at the end of displayScores covers it.
+document.fonts.ready.then(markTruncatedNames)
+window.addEventListener("resize", markTruncatedNames)
 
 function topTenScores(scores) {
     let sortedScores = scores.sort((a, b) => (b.score - a.score))
@@ -46,9 +74,6 @@ function appendScore(score) {
     username.className = "score-username"
     points.className = "score-points"
     username.textContent = score.user.username
-    // A name too long for the column is truncated to an ellipsis by
-    // css/leaderboard.css, so carry the whole one in the tooltip.
-    username.title = score.user.username
     points.textContent = score.score
     scoreItem.append(username, points)
     leaderboard.appendChild(scoreItem)
