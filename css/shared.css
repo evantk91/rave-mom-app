@@ -51,9 +51,16 @@ body {
     justify-content: center;
 }
 
+/* `color` is not optional next to `background-color`. A control with no colour
+   of its own takes the UA's, which is a *system* colour rather than black: iOS
+   Safari paints button labels in the system accent, so these read light blue on
+   the white face, and in dark mode `buttontext` resolves to white and the label
+   disappears into the button entirely. Desktop Chrome happens to default to
+   black, which is why this only ever showed up on a phone. */
 .button {
     align-items: center;
     background-color: white;
+    color: black;
     margin-top: 10px;
     padding-top: 5px;
     padding-bottom: 5px;
@@ -75,9 +82,17 @@ body {
 }
 
 /* 16px is the floor below which iOS Safari auto-zooms the page when an input is
-   focused — that rescales the whole layout mid-login, so it must not go under. */
+   focused — that rescales the whole layout mid-login, so it must not go under.
+
+   `color` pairs with `background-color` for the same reason as .button above:
+   the Login and Sign Up submits carry this class and are left on the white face,
+   so without it their labels are a system colour and vanish on a phone. The text
+   and password fields override both halves in css/login.css — that rule is
+   `input[type="…"].form-field` and outweighs this one, so they stay white on
+   dark. */
 .form-field {
     background-color: white;
+    color: black;
     font-size: max(16px, 1rem);
     padding: 8px;
     width: 100%;
