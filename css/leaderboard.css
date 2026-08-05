@@ -19,15 +19,29 @@
 }
 
 /* Sized by .panel in shared.css, which caps it at the canvas's width and lets
-   it shrink below that on narrow viewports. The width cap is widened here and
-   the height left alone: the other panels are sized to the canvas so the game
-   isn't scaled, but this page has no canvas in it, and a wider box is what
-   keeps `username score` on one line. `width: 100%` still comes from .panel,
-   so narrow viewports shrink below this as before. */
+   it shrink below that on narrow viewports. Both of .panel's sizes are
+   overridden here, and for the same reason: they're derived from the game
+   canvas so the pixel art is never scaled, and this page has no canvas in it.
+   A wider box is what keeps `username score` on one line, and the height is
+   free to be whatever fits.
+
+   `width: 100%` still comes from .panel, so narrow viewports shrink below the
+   width cap as before. The height is the panel's usual height until the
+   viewport is too short for it, and then it's whatever the viewport has, less
+   the 20px #leaderboard-page pads above and below. That's the case a phone is
+   always in: without it the panel keeps its full height and pushes Return to
+   Game off the bottom of the screen.
+
+   Nothing is clipped when it engages, because #leaderboard scrolls on its own
+   — the title and the button hold their places and the list gives up the
+   height. `dvh` rather than `vh` so the shrinking mobile URL bar is counted;
+   `vh` is the tall-as-it-ever-gets value and would put the button back under
+   the browser chrome. */
 #leaderboard-container {
     display: flex;
     flex-direction: column;
     max-width: 760px;
+    height: min(var(--panel-outer-height), 100dvh - 40px);
     padding-bottom: 20px;
 }
 
