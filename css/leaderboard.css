@@ -169,4 +169,40 @@
         gap: 8px;
         font-size: 20px;
     }
+
+    /* Return to Game steps down with the type around it. css/shared.css already
+       shrinks `.button`, but only at `max-width: 560px` — and that is exactly
+       the half of the condition a phone in landscape fails, since a phone on
+       its side is wide (844x390). So the button alone sprang back to its 20px
+       desktop size while the title and scores beside it held the smaller one.
+
+       The value is repeated here rather than adding this device test to
+       css/shared.css, which would take the game page's buttons with it: that
+       panel is a fixed 524px with room for 20px labels, and in phone landscape
+       its dashboard isn't rendered at all, so they have nothing to fix. Keep
+       this in step with the `.button` rule in css/shared.css if that changes.
+
+       The width is pinned for the same reason the size is. shared.css sizes the
+       button at 60% of its container, and the container is the panel — which is
+       366px on a portrait phone but the full 760px cap in landscape, so the
+       button grew with the page even after its label stopped growing. A fixed
+       width is what makes the two orientations agree, and it's the same trade
+       css/game.css makes when it pins the board at 300x366 rather than letting
+       it scale: on a device whose type no longer responds to the viewport,
+       neither should the box around it.
+
+       The value is `min(200px, 100%)` because that is already shared.css's
+       declared `min-width` for this button — so this pins it to a size the
+       layout was always prepared to give it, rather than inventing one. At 11px
+       the widest label here, "Return to Game", is ~154px (Press Start 2P
+       advances 1em per character), which leaves it comfortably inside.
+
+       These rules win on load order, not specificity — they tie with
+       shared.css's `.button` and leaderboard.css is the second stylesheet in
+       the document. Moving it above shared.css in leaderboard.html would
+       silently undo both. */
+    .button {
+        width: min(200px, 100%);
+        font-size: 11px;
+    }
 }
