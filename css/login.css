@@ -11,10 +11,6 @@
     align-items: safe center;
     min-height: 100dvh;
     padding: 24px 12px;
-    background-image: url("../assets/images/IMG_2859.JPG");
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
 }
 
 /* Was `width: 50%; height: 60%; margin-top: 150px`, which on a 390px phone gave
