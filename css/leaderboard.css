@@ -12,10 +12,6 @@
     align-items: safe center;
     min-height: 100dvh;
     padding: 20px 12px;
-    background-image: url("../assets/images/IMG_2859.JPG");
-    background-position: center;
-    background-repeat: repeat;
-    background-size: cover;
 }
 
 /* Sized by .panel in shared.css, which caps it at the canvas's width and lets

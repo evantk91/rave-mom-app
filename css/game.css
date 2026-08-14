@@ -22,10 +22,6 @@
     align-items: safe center;
     min-height: 100dvh;
     padding: 20px var(--panel-border);
-    background-image: url("../assets/images/IMG_2859.JPG");
-    background-position: center;
-    background-repeat: repeat;
-    background-size: cover;
 }
 
 /* Sized by .panel in shared.css so it matches the canvas exactly. */
@@ -61,8 +57,9 @@
     margin: 0 var(--panel-border);
     /* Undoes the `*` reset in shared.css. This box used to collapse onto the
        canvas, so its black background was never visible; now that it has a
-       definite size, the letterboxed area either side of a scaled-down canvas
-       would be painted black over the page's background image. */
+       definite size, keeping it transparent lets the page's own black
+       background show through the letterboxed area either side of a
+       scaled-down canvas instead of painting a second, redundant layer. */
     background-color: transparent;
 }
 
