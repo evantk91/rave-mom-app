@@ -19,8 +19,12 @@ const userSignUp = document.querySelector("#new-user-signup")
 const loginError = document.querySelector("#login-error")
 const signUpError = document.querySelector("#signup-error")
 
+const registerCta = document.querySelector("#register-cta")
 const showSignUpButton = document.querySelector("#show-signup")
 const showLoginButton = document.querySelector("#show-login")
+const welcomeShowLoginButton = document.querySelector("#welcome-show-login")
+const loginShowWelcomeButton = document.querySelector("#login-show-welcome")
+const signupShowWelcomeButton = document.querySelector("#signup-show-welcome")
 
 const passwordToggles = document.querySelectorAll(".password-toggle")
 
@@ -41,13 +45,20 @@ localStorage.clear()
 // unhandled rejection for a request whose failure means nothing.
 fetch(API.scores).catch(() => {})
 
-// Which form is showing is a `signup-view` class on <body>: this file adds and
-// removes it, css/login.css decides what it means. Neither side reaches into
-// the other, the same way js/gamescene.js and css/game.css split `game-over`.
+// Which of the three views is showing is a class on <body> — 'login-view' or
+// 'signup-view', with neither present meaning welcome — that this file adds
+// and removes; css/login.css decides what each means. Neither side reaches
+// into the other, the same way js/gamescene.js and css/game.css split
+// `game-over`.
+registerCta.addEventListener("click", () => showView("signup"))
 showSignUpButton.addEventListener("click", () => showView("signup"))
 showLoginButton.addEventListener("click", () => showView("login"))
+welcomeShowLoginButton.addEventListener("click", () => showView("login"))
+loginShowWelcomeButton.addEventListener("click", () => showView("welcome"))
+signupShowWelcomeButton.addEventListener("click", () => showView("welcome"))
 
 function showView(view) {
+    document.body.classList.toggle("login-view", view === "login")
     document.body.classList.toggle("signup-view", view === "signup")
 
     // Typed values survive a toggle; a revealed password doesn't. The value is
@@ -57,6 +68,8 @@ function showView(view) {
 
     // Without this the keyboard user is left on a control that just vanished,
     // and lands back at the top of the document on the next Tab.
+    if(view === "welcome") return registerCta.focus()
+
     const form = view === "signup" ? userSignUp : userLogin
     form.querySelector("input").focus()
 }
