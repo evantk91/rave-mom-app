@@ -51,26 +51,80 @@ h2 {
     overflow-wrap: break-word;
 }
 
-/* One form shows at a time. The absence of a class on <body> is the login view,
-   which is what makes the default a property of the markup and this stylesheet
-   rather than of js/login.js having run — so a failure to load that script
-   leaves the login form on screen rather than a card with both forms hidden and
-   no way to reveal either. Same handoff as the `game-over` class between
-   js/gamescene.js and css/game.css.
+/* One view shows at a time: welcome, login, or signup. The absence of either
+   class on <body> is the welcome view, which is what makes the default a
+   property of the markup and this stylesheet rather than of js/login.js
+   having run — so a failure to load that script leaves the splash on screen
+   rather than a card with everything hidden and no way to reveal any of it.
+   Same handoff as the `game-over` class between js/gamescene.js and
+   css/game.css.
 
-   `display` rather than the `visibility` used in css/game.css: the hidden form's
-   fields have to leave the tab order, and unlike the game's buttons there is
-   nothing here whose layout depends on their space being reserved. */
+   `display` rather than the `visibility` used in css/game.css: the hidden
+   form's fields have to leave the tab order, and unlike the game's buttons
+   there is nothing here whose layout depends on their space being reserved. */
+#user-login,
 #new-user-signup {
     display: none;
 }
 
-body.signup-view #user-login {
-    display: none;
+body.login-view #user-login {
+    display: flex;
 }
 
 body.signup-view #new-user-signup {
     display: flex;
+}
+
+body.login-view .welcome-view,
+body.signup-view .welcome-view {
+    display: none;
+}
+
+.welcome-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+}
+
+/* start_menu.png (see js/startmenu.js) is a 16-frame strip, 518x666 per frame,
+   built for Phaser's animated title screen. Reused here as plain CSS sprite
+   art: frame 0 alone, held still.
+
+   background-size in percent — not px — is what lets it scale down with the
+   fluid card on mobile: 1600% of the element's *own* current width equals the
+   sheet's full 16-frame width at that same scale, so frame 0 always fills the
+   element exactly, whatever the viewport. `aspect-ratio` is what makes the
+   crop height scale in step with it. 335px of the source's 666px is enough to
+   keep the RAVE MOM lettering and crop out the blinking "click to start" and
+   attribution lines beneath it, which belong to the game's title screen, not
+   this page. */
+.hero-logo {
+    width: 100%;
+    aspect-ratio: 518 / 335;
+    background-image: url(../sprite_sheets/png_sheets/start_menu.png);
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: 1600% auto;
+    image-rendering: pixelated;
+}
+
+.tagline {
+    margin: 16px 0 0;
+    color: white;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    line-height: 1.8;
+    text-align: center;
+    overflow-wrap: break-word;
+}
+
+/* Both forms lead with this, so a player who followed "Log in" or "Sign up"
+   from the splash by mistake isn't stuck — the mutual switch links below still
+   move directly between login and signup without a trip back through here. */
+.back-link {
+    align-self: flex-start;
+    margin-bottom: 10px;
 }
 
 .field-label {
@@ -356,7 +410,8 @@ form.pending .form-switch {
     }
 
     .form-message,
-    .form-switch {
+    .form-switch,
+    .tagline {
         font-size: 8px;
     }
 

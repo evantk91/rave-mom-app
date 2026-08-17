@@ -16,17 +16,33 @@
             <div class="nav-bar-member">
                 <h2>Welcome to Rave Mom</h2>
             </div>
-            <!-- Both forms live here, but only one shows at a time: css/login.css
-                 hides the signup form until js/login.js puts `signup-view` on
-                 <body>. Login is the default because it's the absence of that
-                 class, so it survives the script failing to load.
+            <!-- Three views live here, but only one shows at a time: css/login.css
+                 keys off a class on <body> — 'login-view' or 'signup-view'.
+                 Welcome is the default because it's the absence of both, so it
+                 survives the script failing to load (the fallback is a splash
+                 with inert buttons, same category of degradation as the inert
+                 switch-links below, which already depend on this script).
 
-                 They stay two separate <form> elements. A form only validates
-                 its own controls, so the hidden one's `required` and `minlength`
-                 can never block the visible one's submit — merging them into a
-                 single form is what would create that problem. -->
+                 The two forms stay separate <form> elements. A form only
+                 validates its own controls, so a hidden one's `required` and
+                 `minlength` can never block the visible one's submit — merging
+                 them into a single form is what would create that problem. -->
             <div class="nav-bar-member">
+                <div class="welcome-view" id="welcome-view">
+                    <!-- The game's own title-screen art (js/startmenu.js), reused
+                         unanimated as static splash art — see css/login.css for
+                         how the crop is done responsively. -->
+                    <div class="hero-logo" role="img" aria-label="Rave Mom"></div>
+                    <p class="tagline">Dodge the blasts. Collect the ravers. Survive the night.</p>
+                    <button type="button" class="button" id="register-cta">Register</button>
+                    <p class="form-switch">Already have an account?
+                        <button type="button" class="form-switch-button" id="welcome-show-login">Log in</button>
+                    </p>
+                </div>
+
                 <form id="user-login">
+                    <button type="button" class="form-switch-button back-link" id="login-show-welcome">Back</button>
+
                     <label class="field-label" for="login-username">username</label>
                     <input type="text" id="login-username" name="username" class="form-field" autocomplete="username" required>
 
@@ -72,6 +88,8 @@
                 </form>
 
                 <form id="new-user-signup">
+                    <button type="button" class="form-switch-button back-link" id="signup-show-welcome">Back</button>
+
                     <label class="field-label" for="signup-username">username</label>
                     <input type="text" id="signup-username" name="username" class="form-field" autocomplete="username" required>
 

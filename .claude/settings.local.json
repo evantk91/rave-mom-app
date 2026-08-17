@@ -9,7 +9,11 @@
       "Bash(grep -iE '\\(^|/\\)\\(\\\\.env|\\\\.envrc|.*\\\\.pem|.*\\\\.key|.*\\\\.p12|.*\\\\.pfx|.*secret.*|.*credential.*|master\\\\.key|id_rsa|.*\\\\.keystore|service-account.*\\\\.json|\\\\.netrc|\\\\.npmrc\\)\\($|/\\)')",
       "mcp__github__run_secret_scanning",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "mcp__github__create_pull_request"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
   }
 }
